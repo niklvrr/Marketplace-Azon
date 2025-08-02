@@ -1,74 +1,89 @@
 package config
 
 import (
-	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
+	"log"
+	"os"
+	"strconv"
 	"time"
 )
 
+type AppConfig struct {
+	Env string `yaml:"env"`
+}
+
 type ServerConfig struct {
-	Host         string        `mapstructure:"host"`
-	Port         int           `mapstructure:"port"`
-	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	Host         string        `yaml:"host"`
+	Port         int           `yaml:"port"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
 }
 
 type DatabaseConfig struct {
-	Host           string `mapstructure:"host"`
-	Port           int    `mapstructure:"port"`
-	User           string `mapstructure:"user"`
-	Password       string `mapstructure:"password"`
-	Name           string `mapstructure:"name"`
-	MaxConnections int    `mapstructure:"max_connections"`
+	Host           string `yaml:"host"`
+	Port           int    `yaml:"port"`
+	User           string `yaml:"user"`
+	Password       string `yaml:"password"`
+	Name           string `yaml:"name"`
+	MaxConnections int    `yaml:"max_connections"`
 }
 
 type JWTConfig struct {
-	Secret     string        `mapstructure:"secret"`
-	Expiration time.Duration `mapstructure:"expiration"`
+	Secret     string        `yaml:"secret"`
+	Expiration time.Duration `yaml:"expiration"`
 }
 
 type LogConfig struct {
-	LogLevel string `mapstructure:"log_level"`
-	Format   string `mapstructure:"format"`
+	LogLevel string `yaml:"log_level"`
+	Format   string `yaml:"format"`
 }
 
 type Config struct {
-	Server   ServerConfig   `mapstructure:"server"`
-	Database DatabaseConfig `mapstructure:"database"`
-	JWT      JWTConfig      `mapstructure:"jwt"`
-	Log      LogConfig      `mapstructure:"logging"`
+	App      AppConfig      `yaml:"app"`
+	Server   ServerConfig   `yaml:"server"`
+	Database DatabaseConfig `yaml:"database"`
+	JWT      JWTConfig      `yaml:"jwt"`
+	Log      LogConfig      `yaml:"logging"`
 }
 
 func LoadConfig() (*Config, error) {
-	v := viper.New()
-
-	//v.SetConfigType("env")
-	//v.SetConfigFile(".env")
-	//_ = v.ReadInConfig()
-
-	v.AddConfigPath("configs")
-	v.SetConfigName(".env")
-	v.SetConfigType("env")
-
-	v.AutomaticEnv()
-	//v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	err := viper.ReadInConfig()
+	file, err := os.Open("configs/config.yaml")
 	if err != nil {
-		return nil, err
+		log.Fatal("Не удалось открыть config.yaml:", err)
 	}
-
-	//v.SetConfigName("config")
-	//v.SetConfigType("yaml")
-	//v.AddConfigPath("configs/")
-	//if err := v.ReadInConfig(); err != nil {
-	//	return nil, err
-	//}
-
-	v.AutomaticEnv()
+	defer file.Close()
 
 	var cfg Config
-	if err := v.Unmarshal(&cfg); err != nil {
-		return nil, err
+	if err := yaml.NewDecoder(file).Decode(&cfg); err != nil {
+		log.Fatal("Не удалось декодировать YAML:", err)
+	}
+
+	if app_port := os.Getenv("APP_PORT"); app_port != "" {
+		cfg.Server.Port, err = strconv.Atoi(app_port)
+	}
+
+	if db_host := os.Getenv("DB_HOST"); db_host != "" {
+		cfg.Database.Host = db_host
+	}
+
+	if db_port := os.Getenv("DB_PORT"); db_port != "" {
+		cfg.Database.Port, err = strconv.Atoi(db_port)
+	}
+
+	if db_username := os.Getenv("DB_USER"); db_username != "" {
+		cfg.Database.User = db_username
+	}
+
+	if db_password := os.Getenv("DB_PASSWORD"); db_password != "" {
+		cfg.Database.Password = db_password
+	}
+
+	if db_name := os.Getenv("DB_NAME"); db_name != "" {
+		cfg.Database.Name = db_name
+	}
+
+	if jwt_secret := os.Getenv("JWT_SECRET"); jwt_secret != "" {
+		cfg.JWT.Secret = jwt_secret
 	}
 
 	return &cfg, nil

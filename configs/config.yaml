@@ -1,12 +1,15 @@
+app:
+  env: "local"
+
 server:
   host: "localhost"
-  port: ""
+  port: 9090
   read_timeout: 4s
   write_timeout: 10s
 
 database:
-  host: ""
-  port:
+  host: "localhost"
+  port: 5432
   user: ""
   password: ""
   name: ""
@@ -14,8 +17,8 @@ database:
 
 jwt:
   secret: ""
-  expiration: ""
+  expiration: 24h
 
 logging:
-  log_level: ""
+  log_level: "debug"
   format: "text"
