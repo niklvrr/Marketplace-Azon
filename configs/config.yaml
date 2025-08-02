@@ -1,0 +1,21 @@
+server:
+  host: "localhost"
+  port: ""
+  read_timeout: 4s
+  write_timeout: 10s
+
+database:
+  host: ""
+  port:
+  user: ""
+  password: ""
+  name: ""
+  max_connections: 20
+
+jwt:
+  secret: ""
+  expiration: ""
+
+logging:
+  log_level: ""
+  format: "text"
