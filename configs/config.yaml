@@ -8,11 +8,12 @@ server:
   write_timeout: 10s
 
 database:
-  host: "localhost"
-  port: 5432
-  user: ""
-  password: ""
+  host: "db"
+  port: 5433
+  url: ""
   name: ""
+  password: ""
+  user: ""
   max_connections: 20
 
 jwt:

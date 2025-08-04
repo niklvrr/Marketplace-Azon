@@ -1,17 +1,16 @@
 package app
 
 import (
+	"errors"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
+	"github.com/niklvrr/myMarketplace/internal/config"
+	"github.com/niklvrr/myMarketplace/internal/db"
+	"github.com/niklvrr/myMarketplace/pkg/logger"
 	"log"
 	"log/slog"
-	"myMarketplace/internal/config"
-	"os"
-)
-
-const (
-	envLocal = "local"
-	envDev   = "dev"
-	envProd  = "prod"
 )
 
 func Run() {
@@ -24,30 +23,40 @@ func Run() {
 		log.Fatal(err)
 	}
 
-	log := setupLog(cfg.App.Env)
-	log.Info("firstLog!!")
-	log.Debug("dsavmkdsvm")
+	logger := logger.NewLog(cfg.App.Env)
 
-	// TODO db
+	dbUrl := cfg.Database.Url
+
+	db.NewDB(dbUrl, logger)
+	defer db.Db.Close()
+
+	//time.Sleep(20 * time.Second)
+
+	mustRunMigrations(dbUrl, logger)
 
 	// TODO router
 
 }
 
-func setupLog(env string) *slog.Logger {
-	var logger *slog.Logger
-
-	switch env {
-	case envLocal:
-		logger = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	case envDev:
-		logger = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	case envProd:
-		logger = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+func mustRunMigrations(dbUrl string, logger *slog.Logger) {
+	if dbUrl == "" {
+		logger.Error("dbUrl is empty")
+		return
 	}
 
-	return logger
+	mg, err := migrate.New(
+		"file://migrations",
+		dbUrl,
+	)
+	if err != nil {
+		logger.Error("migration init err", err)
+		return
+	}
+
+	if err := mg.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		logger.Error("migration run err", err)
+		return
+	}
+
+	logger.Info("migration run ok")
 }

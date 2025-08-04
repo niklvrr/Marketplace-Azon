@@ -22,9 +22,10 @@ type ServerConfig struct {
 type DatabaseConfig struct {
 	Host           string `yaml:"host"`
 	Port           int    `yaml:"port"`
-	User           string `yaml:"user"`
-	Password       string `yaml:"password"`
+	Url            string `yaml:"url"`
 	Name           string `yaml:"name"`
+	Password       string `yaml:"password"`
+	User           string `yaml:"user"`
 	MaxConnections int    `yaml:"max_connections"`
 }
 
@@ -58,32 +59,36 @@ func LoadConfig() (*Config, error) {
 		log.Fatal("Не удалось декодировать YAML:", err)
 	}
 
-	if app_port := os.Getenv("APP_PORT"); app_port != "" {
-		cfg.Server.Port, err = strconv.Atoi(app_port)
+	if appPort := os.Getenv("APP_PORT"); appPort != "" {
+		cfg.Server.Port, err = strconv.Atoi(appPort)
 	}
 
-	if db_host := os.Getenv("DB_HOST"); db_host != "" {
-		cfg.Database.Host = db_host
+	if dbHost := os.Getenv("DB_HOST"); dbHost != "" {
+		cfg.Database.Host = dbHost
 	}
 
-	if db_port := os.Getenv("DB_PORT"); db_port != "" {
-		cfg.Database.Port, err = strconv.Atoi(db_port)
+	if dbPort := os.Getenv("DB_PORT"); dbPort != "" {
+		cfg.Database.Port, err = strconv.Atoi(dbPort)
 	}
 
-	if db_username := os.Getenv("DB_USER"); db_username != "" {
-		cfg.Database.User = db_username
+	if dbUrl := os.Getenv("DB_URL"); dbUrl != "" {
+		cfg.Database.Url = dbUrl
 	}
 
-	if db_password := os.Getenv("DB_PASSWORD"); db_password != "" {
-		cfg.Database.Password = db_password
+	if dbName := os.Getenv("DB_NAME"); dbName != "" {
+		cfg.Database.Name = dbName
 	}
 
-	if db_name := os.Getenv("DB_NAME"); db_name != "" {
-		cfg.Database.Name = db_name
+	if dbPassword := os.Getenv("DB_PASSWORD"); dbPassword != "" {
+		cfg.Database.Password = dbPassword
 	}
 
-	if jwt_secret := os.Getenv("JWT_SECRET"); jwt_secret != "" {
-		cfg.JWT.Secret = jwt_secret
+	if dbUser := os.Getenv("DB_USER"); dbUser != "" {
+		cfg.Database.User = dbUser
+	}
+
+	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {
+		cfg.JWT.Secret = jwtSecret
 	}
 
 	return &cfg, nil

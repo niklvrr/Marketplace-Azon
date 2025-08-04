@@ -1,7 +1,11 @@
 package main
 
-import "myMarketplace/internal/app"
+import (
+	"github.com/niklvrr/myMarketplace/internal/app"
+)
 
 func main() {
 	app.Run()
+
+	//time.Sleep(1 * time.Minute)
 }
