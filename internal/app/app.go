@@ -2,15 +2,18 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
+	"github.com/niklvrr/myMarketplace/internal/api"
 	"github.com/niklvrr/myMarketplace/internal/config"
 	"github.com/niklvrr/myMarketplace/internal/db"
 	"github.com/niklvrr/myMarketplace/pkg/logger"
 	"log"
 	"log/slog"
+	"net/http"
 )
 
 func Run() {
@@ -35,7 +38,21 @@ func Run() {
 	mustRunMigrations(dbUrl, logger)
 
 	// TODO router
+	router := api.NewRouter(db.Db)
+	logger.Info("Starting server")
 
+	srv := &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
+		Handler:      router,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		logger.Error("Error starting server", err)
+	}
+
+	logger.Info("Server stopped")
 }
 
 func mustRunMigrations(dbUrl string, logger *slog.Logger) {
