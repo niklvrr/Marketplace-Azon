@@ -37,7 +37,6 @@ func Run() {
 
 	mustRunMigrations(dbUrl, logger)
 
-	// TODO router
 	router := api.NewRouter(db.Db)
 	logger.Info("Starting server")
 
