@@ -3,6 +3,10 @@ package app
 import (
 	"errors"
 	"fmt"
+	"log"
+	"log/slog"
+	"net/http"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -11,9 +15,6 @@ import (
 	"github.com/niklvrr/myMarketplace/internal/config"
 	"github.com/niklvrr/myMarketplace/internal/db"
 	"github.com/niklvrr/myMarketplace/pkg/logger"
-	"log"
-	"log/slog"
-	"net/http"
 )
 
 func Run() {
