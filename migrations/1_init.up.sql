@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
      email TEXT NOT NULL UNIQUE,
      password_hash TEXT NOT NULL,
      role TEXT NOT NULL DEFAULT 'user',  -- 'user', 'seller', 'admin'
+     is_active BOOLEAN DEFAULT TRUE
      created_at TIMESTAMP NOT NULL DEFAULT now()
     );
 
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     price NUMERIC(10,2) NOT NULL CHECK (price >= 0),
     stock INT NOT NULL DEFAULT 0 CHECK (stock >= 0),
+    is_approved BOOLEAN DEFAULT TRUE
     created_at TIMESTAMP NOT NULL DEFAULT now()
     );
 

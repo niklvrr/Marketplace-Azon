@@ -10,5 +10,6 @@ type Product struct {
 	Description string    `json:"description" db:"description"`
 	Price       float64   `json:"price" db:"price"`
 	Stock       int       `json:"stock" db:"stock"`
+	Status      string    `json:"status" db:"status"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 }

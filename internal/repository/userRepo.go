@@ -4,24 +4,24 @@ import (
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/pkg/models"
+	"github.com/niklvrr/myMarketplace/internal/models"
 )
 
 var (
 	createUserQuery = `
-		INSERT INTO users (id, name, email, password, role, create_at)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id, role, create_at`
+		INSERT INTO users (id, name, email, password, role, is_active, create_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, create_at`
 
 	getUserByIdQuery = `
-		SELECT id, name, email, password, role, create_at
+		SELECT id, name, email, password, role, is_active, create_at
 		FROM users WHERE id = $1`
 
 	getUserByEmailQuery = `
-		SELECT id, name, email, password, role, create_at
+		SELECT id, name, email, password, role, is_active, create_at
 		FROM users WHERE email = $1`
 
-	blockUserByIdQuery = `UPDATE users SET role = $1 WHERE id = $2`
+	blockUserByIdQuery = `UPDATE users SET is_active = $1 WHERE id = $2`
 )
 
 var (
@@ -30,8 +30,12 @@ var (
 	blockExecError    = errors.New("error executing blocking user by id")
 )
 
-func CreateUser(ctx context.Context, db *pgxpool.Pool, user *models.User) error {
-	err := db.QueryRow(
+type UserRepo struct {
+	db *pgxpool.Pool
+}
+
+func (r *UserRepo) CreateUser(ctx context.Context, user *models.User) error {
+	err := r.db.QueryRow(
 		ctx, createUserQuery,
 	).Scan(&user.Id, &user.CreateAt)
 
@@ -42,10 +46,17 @@ func CreateUser(ctx context.Context, db *pgxpool.Pool, user *models.User) error 
 	return nil
 }
 
-func GetUserById(ctx context.Context, db *pgxpool.Pool, userId int64) (*models.User, error) {
+func (r *UserRepo) GetUserById(ctx context.Context, userId int64) (*models.User, error) {
 	user := new(models.User)
-	err := db.QueryRow(ctx, getUserByIdQuery, userId).
-		Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.Role, &user.CreateAt)
+	err := r.db.QueryRow(ctx, getUserByIdQuery, userId).
+		Scan(
+			&user.Id,
+			&user.Name,
+			&user.Email,
+			&user.Password,
+			&user.Role,
+			&user.IsActive,
+			&user.CreateAt)
 
 	if err != nil {
 		return &models.User{}, userNotFoundError
@@ -54,10 +65,17 @@ func GetUserById(ctx context.Context, db *pgxpool.Pool, userId int64) (*models.U
 	return user, nil
 }
 
-func GetUserByEmail(ctx context.Context, db *pgxpool.Pool, email string) (*models.User, error) {
+func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := new(models.User)
-	err := db.QueryRow(ctx, getUserByEmailQuery, email).
-		Scan(&user.Id, &user.Name, &user.Email, &user.Password, &user.Role, &user.CreateAt)
+	err := r.db.QueryRow(ctx, getUserByEmailQuery, email).
+		Scan(
+			&user.Id,
+			&user.Name,
+			&user.Email,
+			&user.Password,
+			&user.Role,
+			&user.IsActive,
+			&user.CreateAt)
 
 	if err != nil {
 		return &models.User{}, userNotFoundError
@@ -66,8 +84,8 @@ func GetUserByEmail(ctx context.Context, db *pgxpool.Pool, email string) (*model
 	return user, nil
 }
 
-func BlockUserById(ctx context.Context, db *pgxpool.Pool, userId int64) error {
-	cmdTag, err := db.Exec(ctx, blockUserByIdQuery, "blocked", userId)
+func (r *UserRepo) BlockUserById(ctx context.Context, userId int64) error {
+	cmdTag, err := r.db.Exec(ctx, blockUserByIdQuery, false, userId)
 	if err != nil {
 		return blockExecError
 	}

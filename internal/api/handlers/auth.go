@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/pkg/models"
+	"github.com/niklvrr/myMarketplace/internal/models"
 	"net/http"
 )
 

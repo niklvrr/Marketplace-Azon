@@ -5,34 +5,34 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/pkg/models"
+	"github.com/niklvrr/myMarketplace/internal/models"
 )
 
 var (
 	createProductQuery = `
-		INSERT INTO products (seller_id, category_id, name, description, price, stock, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO products (seller_id, category_id, name, description, price, stock, status, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id;`
 
 	getProductByIdQuery = `
-		SELECT seller_id, category_id, name, description, price, stock, created_at
+		SELECT seller_id, category_id, name, description, price, stock, status, created_at
 		FROM products 
 		WHERE id = $1;`
 
 	updateProductByIdQuery = `
 		UPDATE products
-		SET seller_id = $1, category_id = $2, name = $3, description = $4, price = $5, stock = $6, create_at = $7
-		WHERE id = $8;`
+		SET seller_id = $1, category_id = $2, name = $3, description = $4, price = $5, stock = $6, status = $7, create_at = $8
+		WHERE id = $9;`
 
 	deleteProductByIdQuery = `DELETE FROM products WHERE id = $1;`
 
 	getAllProductsQuery = `
-		SELECT seller_id, category_id, name, description, price, stock, created_at
+		SELECT seller_id, category_id, name, description, price, stock, status, created_at
 		FROM products
 		ORDER BY name;`
 
 	searchQuery = `
-		SELECT seller_id, category_id, name, description, price, stock, created_at
+		SELECT seller_id, category_id, name, description, price, stock, status, created_at
 		FROM products
 		WHERE to_tsvector('simple', name || ' ' || coalesce(description, '')) @@ plainto_tsquery('simple', $1)`
 )
@@ -46,8 +46,12 @@ var (
 	searchProductsError = errors.New(`error searching products`)
 )
 
-func CreateProduct(ctx context.Context, db *pgxpool.Pool, p *models.Product) error {
-	err := db.QueryRow(ctx, createProductQuery)
+type ProductRepo struct {
+	db *pgxpool.Pool
+}
+
+func (r *ProductRepo) CreateProduct(ctx context.Context, p *models.Product) error {
+	err := r.db.QueryRow(ctx, createProductQuery).Scan(&p.Id)
 	if err != nil {
 		return createProductError
 	}
@@ -55,9 +59,9 @@ func CreateProduct(ctx context.Context, db *pgxpool.Pool, p *models.Product) err
 	return nil
 }
 
-func GetProductById(ctx context.Context, db *pgxpool.Pool, id int64) (*models.Product, error) {
+func (r *ProductRepo) GetProductById(ctx context.Context, id int64) (*models.Product, error) {
 	product := new(models.Product)
-	err := db.QueryRow(ctx, getProductByIdQuery, id).
+	err := r.db.QueryRow(ctx, getProductByIdQuery, id).
 		Scan(
 			&product.SellerId,
 			&product.CategoryId,
@@ -65,6 +69,7 @@ func GetProductById(ctx context.Context, db *pgxpool.Pool, id int64) (*models.Pr
 			&product.Description,
 			&product.Price,
 			&product.Stock,
+			&product.Status,
 			&product.CreatedAt)
 
 	if err != nil {
@@ -74,8 +79,8 @@ func GetProductById(ctx context.Context, db *pgxpool.Pool, id int64) (*models.Pr
 	return product, nil
 }
 
-func UpdateProductById(ctx context.Context, db *pgxpool.Pool, product *models.Product) error {
-	cmdTag, err := db.Exec(
+func (r *ProductRepo) UpdateProductById(ctx context.Context, product *models.Product) error {
+	cmdTag, err := r.db.Exec(
 		ctx, updateProductByIdQuery,
 		product.SellerId,
 		product.CategoryId,
@@ -84,6 +89,7 @@ func UpdateProductById(ctx context.Context, db *pgxpool.Pool, product *models.Pr
 		product.Price,
 		product.Stock,
 		product.CreatedAt,
+		product.Status,
 		product.Id)
 
 	if err != nil {
@@ -97,8 +103,8 @@ func UpdateProductById(ctx context.Context, db *pgxpool.Pool, product *models.Pr
 	return nil
 }
 
-func DeleteProductById(ctx context.Context, db *pgxpool.Pool, id int64) error {
-	cmtTag, err := db.Exec(ctx, deleteProductByIdQuery, id)
+func (r *ProductRepo) DeleteProductById(ctx context.Context, id int64) error {
+	cmtTag, err := r.db.Exec(ctx, deleteProductByIdQuery, id)
 	if err != nil {
 		return deleteProductError
 	}
@@ -110,8 +116,8 @@ func DeleteProductById(ctx context.Context, db *pgxpool.Pool, id int64) error {
 	return nil
 }
 
-func GetAllProducts(ctx context.Context, db *pgxpool.Pool) (*[]models.Product, error) {
-	rows, err := db.Query(ctx, getAllProductsQuery)
+func (r *ProductRepo) GetAllProducts(ctx context.Context) (*[]models.Product, error) {
+	rows, err := r.db.Query(ctx, getAllProductsQuery)
 	if err != nil {
 		return &[]models.Product{}, getAllProductsError
 	}
@@ -127,6 +133,7 @@ func GetAllProducts(ctx context.Context, db *pgxpool.Pool) (*[]models.Product, e
 			&product.Description,
 			&product.Price,
 			&product.Stock,
+			&product.Status,
 			&product.CreatedAt)
 
 		if err != nil {
@@ -143,8 +150,8 @@ func GetAllProducts(ctx context.Context, db *pgxpool.Pool) (*[]models.Product, e
 	return &products, nil
 }
 
-func SearchProducts(
-	ctx context.Context, db *pgxpool.Pool,
+func (r *ProductRepo) SearchProducts(
+	ctx context.Context,
 	text string,
 	categoryId *int64,
 	min, max *float64,
@@ -169,7 +176,7 @@ func SearchProducts(
 	args = append(args, offset, limit)
 	sql += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", len(args)-1, len(args))
 
-	rows, err := db.Query(ctx, sql, args...)
+	rows, err := r.db.Query(ctx, sql, args...)
 	if err != nil {
 		return nil, searchProductsError
 	}
@@ -185,6 +192,7 @@ func SearchProducts(
 			&product.Description,
 			&product.Price,
 			&product.Stock,
+			&product.Status,
 			&product.CreatedAt,
 		)
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/pkg/models"
+	"github.com/niklvrr/myMarketplace/internal/models"
 )
 
 var (
@@ -34,8 +34,12 @@ var (
 	rowsIterationError    = errors.New("rows iteration error")
 )
 
-func CreateCategory(ctx context.Context, db *pgxpool.Pool, category *models.Category) error {
-	err := db.QueryRow(
+type CategoryRepo struct {
+	db *pgxpool.Pool
+}
+
+func (r *CategoryRepo) CreateCategory(ctx context.Context, category *models.Category) error {
+	err := r.db.QueryRow(
 		ctx, createCategoryQuery, category.Name, category.Description).
 		Scan(&category.Id)
 
@@ -46,9 +50,9 @@ func CreateCategory(ctx context.Context, db *pgxpool.Pool, category *models.Cate
 	return nil
 }
 
-func GetCategoryById(ctx context.Context, db *pgxpool.Pool, categoryId int64) (*models.Category, error) {
+func (r *CategoryRepo) GetCategoryById(ctx context.Context, categoryId int64) (*models.Category, error) {
 	category := new(models.Category)
-	err := db.QueryRow(ctx, getCategoryByIdQuery, categoryId).Scan(&category.Id, &category.Name, &category.Description)
+	err := r.db.QueryRow(ctx, getCategoryByIdQuery, categoryId).Scan(&category.Id, &category.Name, &category.Description)
 	if err != nil {
 		return &models.Category{}, categoryNotFoundError
 	}
@@ -56,8 +60,8 @@ func GetCategoryById(ctx context.Context, db *pgxpool.Pool, categoryId int64) (*
 	return category, nil
 }
 
-func UpdateCategory(ctx context.Context, db *pgxpool.Pool, category models.Category) error {
-	cmdTag, err := db.Exec(ctx, updateCategoryByIdQuery, category.Name, category.Description, category.Id)
+func (r *CategoryRepo) UpdateCategory(ctx context.Context, category models.Category) error {
+	cmdTag, err := r.db.Exec(ctx, updateCategoryByIdQuery, category.Name, category.Description, category.Id)
 	if err != nil {
 		return updateCategoryError
 	}
@@ -69,8 +73,8 @@ func UpdateCategory(ctx context.Context, db *pgxpool.Pool, category models.Categ
 	return nil
 }
 
-func DeleteCategory(ctx context.Context, db *pgxpool.Pool, categoryId int64) error {
-	cmdTag, err := db.Exec(ctx, deleteCategoryByIdQuery, categoryId)
+func (r *CategoryRepo) DeleteCategory(ctx context.Context, categoryId int64) error {
+	cmdTag, err := r.db.Exec(ctx, deleteCategoryByIdQuery, categoryId)
 	if err != nil {
 		return deleteCategoryError
 	}
@@ -82,8 +86,8 @@ func DeleteCategory(ctx context.Context, db *pgxpool.Pool, categoryId int64) err
 	return nil
 }
 
-func GetAllCategories(ctx context.Context, db *pgxpool.Pool) (*[]models.Category, error) {
-	rows, err := db.Query(ctx, getAllCategoriesQuery)
+func (r *CategoryRepo) GetAllCategories(ctx context.Context) (*[]models.Category, error) {
+	rows, err := r.db.Query(ctx, getAllCategoriesQuery)
 	if err != nil {
 		return nil, getAllCategoriesError
 	}
