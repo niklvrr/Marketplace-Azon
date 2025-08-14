@@ -1,12 +1,12 @@
-package models
+package model
 
-// Product models
+// Product model
 type GetProductsRequest struct {
 	Id int64 `json:"id" binding:"required"`
 }
 
 type CreateProductRequest struct {
-	CategoryId  string  `json:"category_id" binding:"required"`
+	CategoryId  int64   `json:"category_id" binding:"required"`
 	Name        string  `json:"name" binding:"required, min=2, max=100"`
 	Description string  `json:"description" binding:"omitempty,max=5000"`
 	Price       float64 `json:"price" binding:"required,gt=0"`
@@ -14,7 +14,7 @@ type CreateProductRequest struct {
 }
 
 type UpdateProductRequest struct {
-	CategoryId  *string  `json:"category_id" binding:"required"`
+	CategoryId  *int64   `json:"category_id" binding:"required"`
 	Name        *string  `json:"name" binding:"required, min=2, max=100"`
 	Description *string  `json:"description" binding:"omitempty,max=5000"`
 	Price       *float64 `json:"price" binding:"required,gt=0"`
@@ -26,15 +26,13 @@ type DeleteProductRequest struct {
 }
 
 type SearchProductsRequest struct {
-	Text       string   `form:"text" binding:"omitempty,min=1,max=100"`
-	CategoryId *string  `form:"category_id" binding:"omitempty"`
+	Text       *string  `form:"text" binding:"omitempty,min=1,max=100"`
+	CategoryId *int64   `form:"category_id" binding:"omitempty"`
 	Min        *float64 `form:"min" binding:"omitempty,gt=0"`
 	Max        *float64 `form:"max" binding:"omitempty,gt=0"`
-	Offset     int64    `form:"offset" binding:"omitempty,gt=0"`
-	Limit      int64    `form:"limit" binding:"omitempty,gt=0"`
 }
 
-// User models
+// User model
 type SighUpRequest struct {
 	Name     string `json:"name" binding:"required,min=2,max=100"`
 	Email    string `json:"email" binding:"required,email"`
@@ -46,7 +44,7 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-// Admin models
+// Admin model
 type GetUserByIdRequest struct {
 	Id int64 `json:"id" binding:"required"`
 }
@@ -64,7 +62,7 @@ type ApproveProductRequest struct {
 	IsApprove bool  `json:"is_approve" binding:"required"`
 }
 
-// Cart models
+// Cart model
 type AddItemRequest struct {
 	CartId    int64 `json:"cart_id" binding:"required"`
 	ProductId int64 `json:"product_id" binding:"required"`
@@ -84,7 +82,7 @@ type GetCartByUserIdRequest struct {
 	UserId int64 `json:"user_id" binding:"required"`
 }
 
-// Order models
+// Order model
 type CreateOrderRequest struct {
 	Status string  `json:"status" binding:"required"`
 	Total  float64 `json:"total" binding:"required"`
@@ -94,7 +92,7 @@ type GetOrderByIdRequest struct {
 	Id int64 `json:"id" binding:"required"`
 }
 
-// Category models
+// Category model
 type CreateCategoryRequest struct {
 	Name        string `json:"name" binding:"required,min=2,max=100"`
 	Description string `json:"description" binding:"omitempty,max=5000"`

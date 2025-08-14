@@ -1,4 +1,4 @@
-package models
+package model
 
 type ProductResponse struct {
 	Id          int64   `json:"id"`

@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5/pgxpool"
-	models2 "github.com/niklvrr/myMarketplace/internal/models"
+	models2 "github.com/niklvrr/myMarketplace/internal/model"
 )
 
 var (
@@ -33,6 +34,10 @@ var (
 
 type OrderRepo struct {
 	db *pgxpool.Pool
+}
+
+func NewOrderRepo(db *pgxpool.Pool) *OrderRepo {
+	return &OrderRepo{db: db}
 }
 
 func (r *OrderRepo) CreateOrder(ctx context.Context, o *models2.Order, items []models2.OrderItem) error {

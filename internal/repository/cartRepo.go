@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/internal/models"
+	"github.com/niklvrr/myMarketplace/internal/model"
 )
 
 var (
@@ -39,8 +40,12 @@ type CartRepo struct {
 	db *pgxpool.Pool
 }
 
-func (r *CartRepo) GetCartByUserId(ctx context.Context, userId int64) (*models.Cart, error) {
-	cart := new(models.Cart)
+func NewCartRepo(db *pgxpool.Pool) *CartRepo {
+	return &CartRepo{db: db}
+}
+
+func (r *CartRepo) GetCartByUserId(ctx context.Context, userId int64) (*model.Cart, error) {
+	cart := new(model.Cart)
 	err := r.db.QueryRow(ctx, getCartByUserIdQuery, userId).Scan(&cart.Id, &cart.CreatedAt)
 	if err != nil {
 		return nil, cartNotFoundError

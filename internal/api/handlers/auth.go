@@ -3,12 +3,12 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/internal/models"
+	"github.com/niklvrr/myMarketplace/internal/model"
 	"net/http"
 )
 
 // User alias for user model
-type User = models.User
+type User = model.User
 
 func signUp(db *pgxpool.Pool) gin.HandlerFunc {
 	return func(c *gin.Context) {

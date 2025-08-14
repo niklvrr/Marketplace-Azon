@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/internal/models"
+	"github.com/niklvrr/myMarketplace/internal/model"
 )
 
 var (
@@ -38,7 +39,11 @@ type CategoryRepo struct {
 	db *pgxpool.Pool
 }
 
-func (r *CategoryRepo) CreateCategory(ctx context.Context, category *models.Category) error {
+func NewCategoryRepo(db *pgxpool.Pool) *CategoryRepo {
+	return &CategoryRepo{db: db}
+}
+
+func (r *CategoryRepo) CreateCategory(ctx context.Context, category *model.Category) error {
 	err := r.db.QueryRow(
 		ctx, createCategoryQuery, category.Name, category.Description).
 		Scan(&category.Id)
@@ -50,17 +55,17 @@ func (r *CategoryRepo) CreateCategory(ctx context.Context, category *models.Cate
 	return nil
 }
 
-func (r *CategoryRepo) GetCategoryById(ctx context.Context, categoryId int64) (*models.Category, error) {
-	category := new(models.Category)
+func (r *CategoryRepo) GetCategoryById(ctx context.Context, categoryId int64) (*model.Category, error) {
+	category := new(model.Category)
 	err := r.db.QueryRow(ctx, getCategoryByIdQuery, categoryId).Scan(&category.Id, &category.Name, &category.Description)
 	if err != nil {
-		return &models.Category{}, categoryNotFoundError
+		return &model.Category{}, categoryNotFoundError
 	}
 
 	return category, nil
 }
 
-func (r *CategoryRepo) UpdateCategory(ctx context.Context, category models.Category) error {
+func (r *CategoryRepo) UpdateCategory(ctx context.Context, category model.Category) error {
 	cmdTag, err := r.db.Exec(ctx, updateCategoryByIdQuery, category.Name, category.Description, category.Id)
 	if err != nil {
 		return updateCategoryError
@@ -86,16 +91,16 @@ func (r *CategoryRepo) DeleteCategory(ctx context.Context, categoryId int64) err
 	return nil
 }
 
-func (r *CategoryRepo) GetAllCategories(ctx context.Context) (*[]models.Category, error) {
+func (r *CategoryRepo) GetAllCategories(ctx context.Context) (*[]model.Category, error) {
 	rows, err := r.db.Query(ctx, getAllCategoriesQuery)
 	if err != nil {
 		return nil, getAllCategoriesError
 	}
 	defer rows.Close()
 
-	var categories []models.Category
+	var categories []model.Category
 	for rows.Next() {
-		category := new(models.Category)
+		category := new(model.Category)
 		err := rows.Scan(&category.Id, &category.Name, &category.Description)
 		if err != nil {
 			return nil, getAllCategoriesError

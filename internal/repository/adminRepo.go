@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/internal/models"
+	"github.com/niklvrr/myMarketplace/internal/model"
 )
 
 var (
@@ -30,16 +31,20 @@ type AdminRepo struct {
 	db *pgxpool.Pool
 }
 
-func (r *AdminRepo) GetAllUsers(ctx context.Context) ([]models.User, error) {
+func NewAdminRepo(db *pgxpool.Pool) *AdminRepo {
+	return &AdminRepo{db: db}
+}
+
+func (r *AdminRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 	rows, err := r.db.Query(ctx, getAllUsersQuery)
 	if err != nil {
-		return []models.User{}, getAllUsersError
+		return []model.User{}, getAllUsersError
 	}
 	defer rows.Close()
 
-	var users []models.User
+	var users []model.User
 	for rows.Next() {
-		var user models.User
+		var user model.User
 		err := rows.Scan(
 			&user.Id,
 			&user.Name,
@@ -51,13 +56,13 @@ func (r *AdminRepo) GetAllUsers(ctx context.Context) ([]models.User, error) {
 		)
 
 		if err != nil {
-			return []models.User{}, getAllUsersError
+			return []model.User{}, getAllUsersError
 		}
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []models.User{}, rowsIterationError
+		return []model.User{}, rowsIterationError
 	}
 
 	return users, nil

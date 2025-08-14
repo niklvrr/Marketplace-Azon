@@ -3,8 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/niklvrr/myMarketplace/internal/models"
+	"github.com/niklvrr/myMarketplace/internal/model"
 )
 
 var (
@@ -34,7 +35,11 @@ type UserRepo struct {
 	db *pgxpool.Pool
 }
 
-func (r *UserRepo) CreateUser(ctx context.Context, user *models.User) error {
+func NewUserRepo(db *pgxpool.Pool) *UserRepo {
+	return &UserRepo{db: db}
+}
+
+func (r *UserRepo) CreateUser(ctx context.Context, user *model.User) error {
 	err := r.db.QueryRow(
 		ctx, createUserQuery,
 	).Scan(&user.Id, &user.CreateAt)
@@ -46,8 +51,8 @@ func (r *UserRepo) CreateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-func (r *UserRepo) GetUserById(ctx context.Context, userId int64) (*models.User, error) {
-	user := new(models.User)
+func (r *UserRepo) GetUserById(ctx context.Context, userId int64) (*model.User, error) {
+	user := new(model.User)
 	err := r.db.QueryRow(ctx, getUserByIdQuery, userId).
 		Scan(
 			&user.Id,
@@ -59,14 +64,14 @@ func (r *UserRepo) GetUserById(ctx context.Context, userId int64) (*models.User,
 			&user.CreateAt)
 
 	if err != nil {
-		return &models.User{}, userNotFoundError
+		return &model.User{}, userNotFoundError
 	}
 
 	return user, nil
 }
 
-func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	user := new(models.User)
+func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+	user := new(model.User)
 	err := r.db.QueryRow(ctx, getUserByEmailQuery, email).
 		Scan(
 			&user.Id,
@@ -78,7 +83,7 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*models.Us
 			&user.CreateAt)
 
 	if err != nil {
-		return &models.User{}, userNotFoundError
+		return &model.User{}, userNotFoundError
 	}
 
 	return user, nil
