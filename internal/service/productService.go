@@ -3,17 +3,30 @@ package service
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/niklvrr/myMarketplace/internal/model"
-	"github.com/niklvrr/myMarketplace/internal/repository"
 )
 
-type ProductService struct {
-	repo *repository.ProductRepo
+type IProductRepository interface {
+	CreateProduct(ctx context.Context, product *model.Product) error
+	GetProductById(ctx context.Context, productId int64) (*model.Product, error)
+	UpdateProductById(ctx context.Context, product *model.Product) error
+	DeleteProductById(ctx context.Context, productId int64) error
+	GetAllProducts(ctx context.Context, offset, limit int) (*[]model.Product, int64, error)
+	SearchProducts(
+		ctx context.Context,
+		text *string,
+		categoryId *int64,
+		min, max *float64,
+		offset, limit int,
+	) (*[]model.Product, int64, error)
 }
 
-func NewProductService(db *pgxpool.Pool) *ProductService {
-	return &ProductService{repo: repository.NewProductRepo(db)}
+type ProductService struct {
+	repo IProductRepository
+}
+
+func NewProductService(repo IProductRepository) *ProductService {
+	return &ProductService{repo: repo}
 }
 
 func (s *ProductService) Create(ctx context.Context, sellerId int64, req *model.CreateProductRequest) (model.ProductResponse, error) {

@@ -7,18 +7,18 @@ type GetProductsRequest struct {
 
 type CreateProductRequest struct {
 	CategoryId  int64   `json:"category_id" binding:"required"`
-	Name        string  `json:"name" binding:"required, min=2, max=100"`
+	Name        string  `json:"name" binding:"required,min=2,max=100"`
 	Description string  `json:"description" binding:"omitempty,max=5000"`
 	Price       float64 `json:"price" binding:"required,gt=0"`
-	Stock       int     `json:"stock" binding:"required, min=0"`
+	Stock       int     `json:"stock" binding:"required,min=0"`
 }
 
 type UpdateProductRequest struct {
 	CategoryId  *int64   `json:"category_id" binding:"required"`
-	Name        *string  `json:"name" binding:"required, min=2, max=100"`
+	Name        *string  `json:"name" binding:"required,min=2,max=100"`
 	Description *string  `json:"description" binding:"omitempty,max=5000"`
 	Price       *float64 `json:"price" binding:"required,gt=0"`
-	Stock       *int     `json:"stock" binding:"required, min=0"`
+	Stock       *int     `json:"stock" binding:"required,min=0"`
 }
 
 type DeleteProductRequest struct {

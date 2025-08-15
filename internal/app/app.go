@@ -11,7 +11,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
-	"github.com/niklvrr/myMarketplace/internal/api"
+	"github.com/niklvrr/myMarketplace/internal/api/router"
 	"github.com/niklvrr/myMarketplace/internal/config"
 	"github.com/niklvrr/myMarketplace/internal/db"
 	"github.com/niklvrr/myMarketplace/pkg/logger"
@@ -27,32 +27,33 @@ func Run() {
 		log.Fatal(err)
 	}
 
-	logger := logger.NewLog(cfg.App.Env)
+	lgr := logger.NewLog(cfg.App.Env)
 
 	dbUrl := cfg.Database.Url
 
-	db.NewDB(dbUrl, logger)
+	db.NewDB(dbUrl, lgr)
 	defer db.Db.Close()
 
 	//time.Sleep(20 * time.Second)
 
-	mustRunMigrations(dbUrl, logger)
+	mustRunMigrations(dbUrl, lgr)
 
-	router := api.NewRouter(db.Db)
-	logger.Info("Starting server")
+	r := router.NewRouter(db.Db)
+	lgr.Info("Starting server")
 
 	srv := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
-		Handler:      router,
+		Addr: fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
+		//Addr:         fmt.Sprintf("%s:%d", "0.0.0.0", cfg.Server.Port),
+		Handler:      r,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
 	}
 
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		logger.Error("Error starting server", err)
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		lgr.Error("Error starting server", err)
 	}
 
-	logger.Info("Server stopped")
+	lgr.Info("Server stopped")
 }
 
 func mustRunMigrations(dbUrl string, logger *slog.Logger) {

@@ -1,11 +1,12 @@
 package config
 
 import (
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"strconv"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type AppConfig struct {
@@ -59,8 +60,15 @@ func LoadConfig() (*Config, error) {
 		log.Fatal("Не удалось декодировать YAML:", err)
 	}
 
+	if appHost := os.Getenv("APP_HOST"); appHost != "" {
+		cfg.Server.Host = appHost
+	}
+
 	if appPort := os.Getenv("APP_PORT"); appPort != "" {
 		cfg.Server.Port, err = strconv.Atoi(appPort)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if dbHost := os.Getenv("DB_HOST"); dbHost != "" {
@@ -69,6 +77,9 @@ func LoadConfig() (*Config, error) {
 
 	if dbPort := os.Getenv("DB_PORT"); dbPort != "" {
 		cfg.Database.Port, err = strconv.Atoi(dbPort)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if dbUrl := os.Getenv("DB_URL"); dbUrl != "" {
