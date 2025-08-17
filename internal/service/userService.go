@@ -118,13 +118,13 @@ func (s *UserService) UnblockUserById(ctx context.Context, req *model.UnblockUse
 	return nil
 }
 
-func (s *UserService) UpdateUserRole(ctx context.Context, req *model.UpdateUserRoleRequest) (model.UserResponse, error) {
+func (s *UserService) UpdateUserRole(ctx context.Context, req *model.UpdateUserRoleRequest) error {
 	err := s.repo.UpdateUserRole(ctx, req.Id, req.Role)
 	if err != nil {
-		return model.UserResponse{}, err
+		return err
 	}
 
-	return model.UserResponse{Id: req.Id}, nil
+	return nil
 }
 
 func (s *UserService) GetAllUsers(ctx context.Context) ([]model.UserResponse, error) {

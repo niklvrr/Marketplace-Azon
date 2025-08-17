@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"context"
@@ -14,10 +14,10 @@ type IUserService interface {
 	Login(ctx context.Context, req *model.LoginRequest) (model.UserResponse, error)
 	GetUserById(ctx context.Context, req *model.GetUserByIdRequest) (model.UserResponse, error)
 	UpdateUserById(ctx context.Context, req *model.UpdateUserByIdRequest) (model.UserResponse, error)
-	BlockUserById(ctx context.Context, req *model.BlockUserByIdRequest) (model.UserResponse, error)
-	UnblockUserById(ctx context.Context, req *model.UnblockUserByIdRequest) (model.UserResponse, error)
+	BlockUserById(ctx context.Context, req *model.BlockUserByIdRequest) error
+	UnblockUserById(ctx context.Context, req *model.UnblockUserByIdRequest) error
 	GetAllUsers(ctx context.Context) ([]model.UserResponse, error)
-	UpdateUserRole(ctx context.Context, req *model.UpdateUserRoleRequest) (model.UserResponse, error)
+	UpdateUserRole(ctx context.Context, req *model.UpdateUserRoleRequest) error
 	ApproveProduct(ctx context.Context, req *model.ApproveProductRequest) error
 }
 
@@ -98,4 +98,70 @@ func (h *UserHandler) BlockUserById(c *gin.Context) {
 		errs.RespondError(c, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
+
+	err := h.svc.BlockUserById(c, &req)
+	if err != nil {
+		errs.RespondServiceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": true})
+}
+
+func (h *UserHandler) UnblockUserById(c *gin.Context) {
+	var req model.UnblockUserByIdRequest
+	if err := c.ShouldBind(&req); err != nil {
+		errs.RespondError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	err := h.svc.UnblockUserById(c, &req)
+	if err != nil {
+		errs.RespondServiceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": true})
+}
+
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.svc.GetAllUsers(c)
+	if err != nil {
+		errs.RespondServiceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": users})
+}
+
+func (h *UserHandler) UpdateUserRole(c *gin.Context) {
+	var req model.UpdateUserRoleRequest
+	if err := c.ShouldBind(&req); err != nil {
+		errs.RespondError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	err := h.svc.UpdateUserRole(c, &req)
+	if err != nil {
+		errs.RespondServiceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": true})
+}
+
+func (h *UserHandler) ApproveProduct(c *gin.Context) {
+	var req model.ApproveProductRequest
+	if err := c.ShouldBind(&req); err != nil {
+		errs.RespondError(c, http.StatusBadRequest, "invalid_request", err.Error())
+		return
+	}
+
+	err := h.svc.ApproveProduct(c, &req)
+	if err != nil {
+		errs.RespondServiceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": true})
 }

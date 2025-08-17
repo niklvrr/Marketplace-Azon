@@ -2,10 +2,10 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/niklvrr/myMarketplace/internal/handlers"
+	"github.com/niklvrr/myMarketplace/internal/handler"
 )
 
-func registerProductRouter(router *gin.RouterGroup, productHandler *handlers.ProductHandler) {
+func registerProductRouter(router *gin.RouterGroup, productHandler *handler.ProductHandler) {
 	products := router.Group("/products")
 	{
 		products.GET("/:id", productHandler.Get)

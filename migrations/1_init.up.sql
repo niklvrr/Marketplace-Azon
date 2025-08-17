@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
      id SERIAL PRIMARY KEY,
      name TEXT NOT NULL,
      email TEXT NOT NULL UNIQUE,
-     password_hash TEXT NOT NULL,
+     password TEXT NOT NULL,
      role TEXT NOT NULL DEFAULT 'user',  -- 'user', 'seller', 'admin'
      is_active BOOLEAN DEFAULT TRUE
      created_at TIMESTAMP NOT NULL DEFAULT now()
