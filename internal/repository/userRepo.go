@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/niklvrr/myMarketplace/internal/model"
@@ -10,16 +11,16 @@ import (
 
 var (
 	createUserQuery = `
-		INSERT INTO users (id, name, email, password, role, is_active, create_at)
+		INSERT INTO users (name, email, password_hash, role, is_active, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, create_at`
+		RETURNING id`
 
 	getUserByIdQuery = `
-		SELECT id, name, email, password, role, is_active, create_at
+		SELECT id, name, email, password, role, is_active, created_at
 		FROM users WHERE id = $1`
 
 	getUserByEmailAndPasswordQuery = `
-		SELECT id, name, email, password, role, is_active, create_at
+		SELECT id, name, email, password, role, is_active, created_at
 		FROM users WHERE email = $1 AND password = $2`
 
 	updateUserByIdQuery = `
@@ -41,7 +42,7 @@ var (
 )
 
 var (
-	createUserError     = errors.New("error creating user")
+	createUserError     = errors.New("error creating user я того рот ебал")
 	userNotFoundError   = errors.New("user not found")
 	updateUserError     = errors.New("error updating user")
 	blockExecError      = errors.New("error executing blocking user by id")
@@ -62,10 +63,16 @@ func NewUserRepo(db *pgxpool.Pool) *UserRepo {
 func (r *UserRepo) CreateUser(ctx context.Context, user *model.User) error {
 	err := r.db.QueryRow(
 		ctx, createUserQuery,
-	).Scan(&user.Id, &user.CreateAt)
+		user.Name,
+		user.Email,
+		user.Password,
+		"user",
+		true,
+		time.Now(),
+	).Scan(&user.Id)
 
 	if err != nil {
-		return createUserError
+		return err
 	}
 
 	return nil
