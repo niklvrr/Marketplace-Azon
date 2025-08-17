@@ -37,7 +37,7 @@ var (
 
 	updateUserRoleQuery = `UPDATE users SET role=$1 WHERE user_id=$2`
 
-	approveProductQuery = `UPDATE products SET is_approve=$1 WHERE product_id=$2`
+	approveProductQuery = `UPDATE products SET is_approve=TRUE WHERE product_id=$2`
 )
 
 var (
@@ -110,7 +110,7 @@ func (r *UserRepo) GetUserByEmailAndPassword(ctx context.Context, email, passwor
 }
 
 func (r *UserRepo) UpdateUserById(ctx context.Context, user *model.User) error {
-	cmdTag, err := r.db.Exec(ctx, updateUserByIdQuery, user.Name, user.Email, user.Password)
+	cmdTag, err := r.db.Exec(ctx, updateUserByIdQuery, user.Name, user.Email, user.Password, user.Id)
 	if err != nil {
 		return updateUserError
 	}
@@ -135,7 +135,7 @@ func (r *UserRepo) BlockUserById(ctx context.Context, userId int64) error {
 	return nil
 }
 
-func (r *UserRepo) UnblockUserById(ctx context.Context, userId int64) error {
+func (r *UserRepo) UnBlockUserById(ctx context.Context, userId int64) error {
 	cmdTag, err := r.db.Exec(ctx, unBlockUserByIdQuery, userId)
 	if err != nil {
 		return unBlockExecError
@@ -194,8 +194,8 @@ func (r *UserRepo) UpdateUserRole(ctx context.Context, userId int64, newRole str
 	return nil
 }
 
-func (r *UserRepo) ApproveProduct(ctx context.Context, userId int64) error {
-	cmdTag, err := r.db.Exec(ctx, approveProductQuery, true, userId)
+func (r *UserRepo) ApproveProduct(ctx context.Context, productId int64) error {
+	cmdTag, err := r.db.Exec(ctx, approveProductQuery, productId)
 	if err != nil {
 		return approveProductError
 	}

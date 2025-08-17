@@ -27,15 +27,6 @@ func NewProductsHandler(service IProductService) *ProductHandler {
 	return &ProductHandler{svc: service}
 }
 
-//func (h *ProductHandler) RegisterRoutes(rg *gin.RouterGroup) {
-//	rg.GET("/products/all", h.GetAll)
-//	rg.GET("/products/search", h.Search)
-//	rg.GET("/products/:id", h.Get)
-//	rg.POST("/products", h.Create)
-//	rg.PUT("/products/:id", h.Update)
-//	rg.DELETE("/products/:id", h.Delete)
-//}
-
 func (h *ProductHandler) Create(ctx *gin.Context) {
 	var req model.CreateProductRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

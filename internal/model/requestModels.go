@@ -44,22 +44,32 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-// Admin model
 type GetUserByIdRequest struct {
 	Id int64 `json:"id" binding:"required"`
 }
 
-type UpdateUserRoleRequest struct {
-	Role string `json:"role" binding:"required"`
+type UpdateUserByIdRequest struct {
+	Id       int64   `json:"id" binding:"required"`
+	Name     *string `json:"name" binding:"omitempty,min=2,max=100"`
+	Email    *string `json:"email" binding:"omitempty,email"`
+	Password *string `json:"password" binding:"omitempty,min=6"`
 }
 
-type UpdateUserStatusRequest struct {
-	Status string `json:"status" binding:"required"`
+type BlockUserByIdRequest struct {
+	Id int64 `json:"id" binding:"required"`
+}
+
+type UnblockUserByIdRequest struct {
+	Id int64 `json:"id" binding:"required"`
+}
+
+type UpdateUserRoleRequest struct {
+	Id   int64  `json:"id" binding:"required"`
+	Role string `json:"role" binding:"required"`
 }
 
 type ApproveProductRequest struct {
 	ProductId int64 `json:"product_id" binding:"required"`
-	IsApprove bool  `json:"is_approve" binding:"required"`
 }
 
 // Cart model
