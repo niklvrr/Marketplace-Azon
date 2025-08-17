@@ -18,17 +18,37 @@ var (
 		SELECT id, name, email, password, role, is_active, create_at
 		FROM users WHERE id = $1`
 
-	getUserByEmailQuery = `
+	getUserByEmailAndPasswordQuery = `
 		SELECT id, name, email, password, role, is_active, create_at
-		FROM users WHERE email = $1`
+		FROM users WHERE email = $1 AND password = $2`
 
-	blockUserByIdQuery = `UPDATE users SET is_active = $1 WHERE id = $2`
+	updateUserByIdQuery = `
+		UPDATE users
+		SET name = $1, email = $2, password = $3
+		WHERE id = $4`
+
+	blockUserByIdQuery = `UPDATE users SET is_active = FALSE WHERE id = $1`
+
+	unBlockUserByIdQuery = `UPDATE users SET is_active = TRUE WHERE id = $1`
+
+	getAllUsersQuery = `
+		SELECT user_id, name, email, password, role, is_active, create_at
+		FROM users`
+
+	updateUserRoleQuery = `UPDATE users SET role=$1 WHERE user_id=$2`
+
+	approveProductQuery = `UPDATE products SET is_approve=$1 WHERE product_id=$2`
 )
 
 var (
-	createUserError   = errors.New("error creating user")
-	userNotFoundError = errors.New("user not found")
-	blockExecError    = errors.New("error executing blocking user by id")
+	createUserError     = errors.New("error creating user")
+	userNotFoundError   = errors.New("user not found")
+	updateUserError     = errors.New("error updating user")
+	blockExecError      = errors.New("error executing blocking user by id")
+	unBlockExecError    = errors.New("error executing unblocking user by id")
+	getAllUsersError    = errors.New("GetAll Users Error")
+	updateUserRoleError = errors.New("update User Role Error")
+	approveProductError = errors.New("approve Product Error")
 )
 
 type UserRepo struct {
@@ -70,9 +90,9 @@ func (r *UserRepo) GetUserById(ctx context.Context, userId int64) (*model.User, 
 	return user, nil
 }
 
-func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
+func (r *UserRepo) GetUserByEmailAndPassword(ctx context.Context, email, password string) (*model.User, error) {
 	user := new(model.User)
-	err := r.db.QueryRow(ctx, getUserByEmailQuery, email).
+	err := r.db.QueryRow(ctx, getUserByEmailAndPasswordQuery, email, password).
 		Scan(
 			&user.Id,
 			&user.Name,
@@ -89,14 +109,99 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*model.Use
 	return user, nil
 }
 
+func (r *UserRepo) UpdateUserById(ctx context.Context, user *model.User) error {
+	cmdTag, err := r.db.Exec(ctx, updateUserByIdQuery, user.Name, user.Email, user.Password)
+	if err != nil {
+		return updateUserError
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return rowsIterationError
+	}
+
+	return nil
+}
+
 func (r *UserRepo) BlockUserById(ctx context.Context, userId int64) error {
-	cmdTag, err := r.db.Exec(ctx, blockUserByIdQuery, false, userId)
+	cmdTag, err := r.db.Exec(ctx, blockUserByIdQuery, userId)
 	if err != nil {
 		return blockExecError
 	}
 
 	if cmdTag.RowsAffected() == 0 {
 		return userNotFoundError
+	}
+
+	return nil
+}
+
+func (r *UserRepo) UnblockUserById(ctx context.Context, userId int64) error {
+	cmdTag, err := r.db.Exec(ctx, unBlockUserByIdQuery, userId)
+	if err != nil {
+		return unBlockExecError
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return userNotFoundError
+	}
+
+	return nil
+}
+
+func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	rows, err := r.db.Query(ctx, getAllUsersQuery)
+	if err != nil {
+		return []model.User{}, getAllUsersError
+	}
+	defer rows.Close()
+
+	var users []model.User
+	for rows.Next() {
+		var user model.User
+		err := rows.Scan(
+			&user.Id,
+			&user.Name,
+			&user.Email,
+			&user.Password,
+			&user.Role,
+			&user.IsActive,
+			&user.CreateAt,
+		)
+
+		if err != nil {
+			return []model.User{}, getAllUsersError
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []model.User{}, rowsIterationError
+	}
+
+	return users, nil
+}
+
+func (r *UserRepo) UpdateUserRole(ctx context.Context, userId int64, newRole string) error {
+	cmdTag, err := r.db.Exec(ctx, updateUserRoleQuery, newRole, userId)
+	if err != nil {
+		return updateUserRoleError
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return userNotFoundError
+	}
+
+	return nil
+}
+
+func (r *UserRepo) ApproveProduct(ctx context.Context, userId int64) error {
+	cmdTag, err := r.db.Exec(ctx, approveProductQuery, true, userId)
+	if err != nil {
+		return approveProductError
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return productNotFound
 	}
 
 	return nil

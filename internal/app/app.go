@@ -42,8 +42,7 @@ func Run() {
 	lgr.Info("Starting server")
 
 	srv := &http.Server{
-		Addr: fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
-		//Addr:         fmt.Sprintf("%s:%d", "0.0.0.0", cfg.Server.Port),
+		Addr:         fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port),
 		Handler:      r,
 		ReadTimeout:  cfg.Server.ReadTimeout,
 		WriteTimeout: cfg.Server.WriteTimeout,
