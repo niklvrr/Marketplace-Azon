@@ -9,7 +9,7 @@ import (
 type IUserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserById(ctx context.Context, userId int64) (*model.User, error)
-	GetUserByEmailAndPassword(ctx context.Context, email, password string) (*model.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	UpdateUserById(ctx context.Context, user *model.User) error
 	BlockUserById(ctx context.Context, userId int64) error
 	UnBlockUserById(ctx context.Context, userId int64) error
@@ -47,12 +47,12 @@ func (s *UserService) SignUp(ctx context.Context, req *model.SighUpRequest) (mod
 }
 
 func (s *UserService) Login(ctx context.Context, req *model.LoginRequest) (model.UserResponse, error) {
-	p := model.User{
+	u := model.User{
 		Email:    req.Email,
 		Password: req.Password,
 	}
 
-	user, err := s.repo.GetUserByEmailAndPassword(ctx, p.Email, p.Password)
+	user, err := s.repo.GetUserByEmail(ctx, u.Email)
 	if err != nil {
 		return model.UserResponse{}, err
 	}
@@ -67,6 +67,20 @@ func (s *UserService) Login(ctx context.Context, req *model.LoginRequest) (model
 
 func (s *UserService) GetUserById(ctx context.Context, req *model.GetUserByIdRequest) (model.UserResponse, error) {
 	user, err := s.repo.GetUserById(ctx, req.Id)
+	if err != nil {
+		return model.UserResponse{}, err
+	}
+
+	return model.UserResponse{
+		Id:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
+		Role:  user.Role,
+	}, nil
+}
+
+func (s *UserService) GetUserByEmail(ctx context.Context, req *model.GetUserByEmailRequest) (model.UserResponse, error) {
+	user, err := s.repo.GetUserByEmail(ctx, req.Email)
 	if err != nil {
 		return model.UserResponse{}, err
 	}

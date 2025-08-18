@@ -45,11 +45,15 @@ type LoginRequest struct {
 }
 
 type GetUserByIdRequest struct {
-	Id int64 `json:"id" binding:"required"`
+	Id int64 `json:"id" binding:"required,email"`
+}
+
+type GetUserByEmailRequest struct {
+	Email string `json:"email" binding:"required,email"`
 }
 
 type UpdateUserByIdRequest struct {
-	Id       int64   `json:"id" binding:"required"`
+	Id       int64   `json:"id"`
 	Name     *string `json:"name" binding:"omitempty,min=2,max=100"`
 	Email    *string `json:"email" binding:"omitempty,email"`
 	Password *string `json:"password" binding:"omitempty,min=6"`

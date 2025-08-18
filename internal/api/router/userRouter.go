@@ -9,16 +9,17 @@ func registerUserRouter(router *gin.RouterGroup, userHandler *handler.UserHandle
 	user := router.Group("/user")
 	{
 		user.POST("", userHandler.SignUp)
-		user.GET("", userHandler.Login)
+		user.GET("/login/", userHandler.Login)
 		user.GET("/:id", userHandler.GetUserById)
 		user.PUT("/:id", userHandler.UpdateUserById)
+		user.GET("/", userHandler.GetUserByEmail)
 
 		admin := user.Group("/admin")
 		{
 			admin.PUT("/block/:id", userHandler.BlockUserById)
 			admin.PUT("/unblock/:id", userHandler.UnblockUserById)
 			admin.GET("", userHandler.GetAllUsers)
-			admin.PUT("/role/:id", userHandler.UpdateUserRole)
+			admin.PUT("/role/:id/", userHandler.UpdateUserRole)
 			admin.PUT("/approve/:id", userHandler.ApproveProduct)
 		}
 	}

@@ -11,7 +11,7 @@ import (
 
 var (
 	createUserQuery = `
-		INSERT INTO users (name, email, password_hash, role, is_active, created_at)
+		INSERT INTO users (name, email, password, role, is_active, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`
 
@@ -19,9 +19,9 @@ var (
 		SELECT id, name, email, password, role, is_active, created_at
 		FROM users WHERE id = $1`
 
-	getUserByEmailAndPasswordQuery = `
+	getUserByEmailQuery = `
 		SELECT id, name, email, password, role, is_active, created_at
-		FROM users WHERE email = $1 AND password = $2`
+		FROM users WHERE email = $1`
 
 	updateUserByIdQuery = `
 		UPDATE users
@@ -33,10 +33,10 @@ var (
 	unBlockUserByIdQuery = `UPDATE users SET is_active = TRUE WHERE id = $1`
 
 	getAllUsersQuery = `
-		SELECT user_id, name, email, password, role, is_active, create_at
+		SELECT id, name, email, password, role, is_active, created_at
 		FROM users`
 
-	updateUserRoleQuery = `UPDATE users SET role=$1 WHERE user_id=$2`
+	updateUserRoleQuery = `UPDATE users SET role=$1 WHERE id=$2`
 
 	approveProductQuery = `UPDATE products SET is_approve=TRUE WHERE product_id=$2`
 )
@@ -97,9 +97,9 @@ func (r *UserRepo) GetUserById(ctx context.Context, userId int64) (*model.User, 
 	return user, nil
 }
 
-func (r *UserRepo) GetUserByEmailAndPassword(ctx context.Context, email, password string) (*model.User, error) {
+func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	user := new(model.User)
-	err := r.db.QueryRow(ctx, getUserByEmailAndPasswordQuery, email, password).
+	err := r.db.QueryRow(ctx, getUserByEmailQuery, email).
 		Scan(
 			&user.Id,
 			&user.Name,
@@ -191,7 +191,7 @@ func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 func (r *UserRepo) UpdateUserRole(ctx context.Context, userId int64, newRole string) error {
 	cmdTag, err := r.db.Exec(ctx, updateUserRoleQuery, newRole, userId)
 	if err != nil {
-		return updateUserRoleError
+		return err
 	}
 
 	if cmdTag.RowsAffected() == 0 {
