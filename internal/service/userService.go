@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/niklvrr/myMarketplace/internal/model"
+	"github.com/niklvrr/myMarketplace/pkg/jwt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type IUserRepository interface {
@@ -19,34 +22,38 @@ type IUserRepository interface {
 }
 
 type UserService struct {
-	repo IUserRepository
+	repo       IUserRepository
+	jwtManager *jwt.JWTManager
 }
 
-func NewUserService(repo IUserRepository) *UserService {
-	return &UserService{repo: repo}
+func NewUserService(repo IUserRepository, jwtManager *jwt.JWTManager) *UserService {
+	return &UserService{
+		repo:       repo,
+		jwtManager: jwtManager,
+	}
 }
 
-func (s *UserService) SignUp(ctx context.Context, req *model.SighUpRequest) (model.UserResponse, error) {
+func (s *UserService) SignUp(ctx context.Context, req *model.SighUpRequest) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
 	user := model.User{
 		Name:     req.Name,
 		Email:    req.Email,
-		Password: req.Password,
+		Password: string(hashedPassword),
 	}
 
-	err := s.repo.CreateUser(ctx, &user)
+	err = s.repo.CreateUser(ctx, &user)
 	if err != nil {
-		return model.UserResponse{}, err
+		return "", err
 	}
 
-	return model.UserResponse{
-		Id:    user.Id,
-		Name:  user.Name,
-		Email: user.Email,
-		Role:  user.Role,
-	}, nil
+	return s.jwtManager.GenerateToken(user.Id, user.Role)
 }
 
-func (s *UserService) Login(ctx context.Context, req *model.LoginRequest) (model.UserResponse, error) {
+func (s *UserService) Login(ctx context.Context, req *model.LoginRequest) (string, error) {
 	u := model.User{
 		Email:    req.Email,
 		Password: req.Password,
@@ -54,15 +61,15 @@ func (s *UserService) Login(ctx context.Context, req *model.LoginRequest) (model
 
 	user, err := s.repo.GetUserByEmail(ctx, u.Email)
 	if err != nil {
-		return model.UserResponse{}, err
+		return "", err
 	}
 
-	return model.UserResponse{
-		Id:    user.Id,
-		Name:  user.Name,
-		Email: user.Email,
-		Role:  user.Role,
-	}, nil
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		return "", fmt.Errorf("wrong password")
+	}
+
+	return s.jwtManager.GenerateToken(user.Id, user.Role)
 }
 
 func (s *UserService) GetUserById(ctx context.Context, req *model.GetUserByIdRequest) (model.UserResponse, error) {
@@ -93,15 +100,25 @@ func (s *UserService) GetUserByEmail(ctx context.Context, req *model.GetUserByEm
 	}, nil
 }
 
-func (s *UserService) UpdateUserById(ctx context.Context, req *model.UpdateUserByIdRequest) (model.UserResponse, error) {
-	user := model.User{
-		Id:       req.Id,
-		Name:     *req.Name,
-		Email:    *req.Email,
-		Password: *req.Password,
+func (s *UserService) UpdateUserById(ctx context.Context, req *model.UpdateUserByIdRequest, role string) (model.UserResponse, error) {
+	user, err := s.repo.GetUserById(ctx, req.Id)
+	if err != nil {
+		return model.UserResponse{}, err
 	}
 
-	err := s.repo.UpdateUserById(ctx, &user)
+	if user.Name != req.Name && req.Name != "" {
+		user.Name = req.Name
+	}
+
+	if req.Email != req.Email && req.Email != "" {
+		user.Email = req.Email
+	}
+
+	if req.Password != req.Password && req.Password != "" {
+		user.Password = req.Password
+	}
+
+	err = s.repo.UpdateUserById(ctx, user)
 	if err != nil {
 		return model.UserResponse{}, err
 	}
@@ -110,7 +127,7 @@ func (s *UserService) UpdateUserById(ctx context.Context, req *model.UpdateUserB
 		Id:    user.Id,
 		Name:  user.Name,
 		Email: user.Email,
-		Role:  user.Role,
+		Role:  role,
 	}, nil
 }
 

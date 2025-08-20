@@ -2,25 +2,33 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/niklvrr/myMarketplace/internal/api/middleware"
 	"github.com/niklvrr/myMarketplace/internal/handler"
+	"github.com/niklvrr/myMarketplace/pkg/jwt"
 )
 
-func registerUserRouter(router *gin.RouterGroup, userHandler *handler.UserHandler) {
+func registerUserRouter(router *gin.RouterGroup, userHandler *handler.UserHandler, jwtManager *jwt.JWTManager) {
 	user := router.Group("/user")
 	{
-		user.POST("", userHandler.SignUp)
-		user.GET("/login/", userHandler.Login)
-		user.GET("/:id", userHandler.GetUserById)
-		user.PUT("/:id", userHandler.UpdateUserById)
-		user.GET("/", userHandler.GetUserByEmail)
+		user.POST("/signup", userHandler.SignUp)
+		user.POST("/login", userHandler.Login)
 
-		admin := user.Group("/admin")
+		auth := user.Group("")
+		auth.Use(middleware.JWTRegister(jwtManager))
 		{
-			admin.PUT("/block/:id", userHandler.BlockUserById)
-			admin.PUT("/unblock/:id", userHandler.UnblockUserById)
-			admin.GET("", userHandler.GetAllUsers)
-			admin.PUT("/role/:id/", userHandler.UpdateUserRole)
-			admin.PUT("/approve/:id", userHandler.ApproveProduct)
+			auth.GET("", userHandler.GetUserById)
+			auth.PUT("", userHandler.UpdateUserById)
+			auth.POST("", userHandler.GetUserByEmail)
+			auth.PUT("/role", userHandler.UpdateUserRole)
+
+			admin := auth.Group("/admin")
+			admin.Use(middleware.RequireRole("admin"))
+			{
+				admin.PUT("/block", userHandler.BlockUserById)
+				admin.PUT("/unblock", userHandler.UnblockUserById)
+				admin.GET("", userHandler.GetAllUsers)
+				admin.PUT("/approve", userHandler.ApproveProduct)
+			}
 		}
 	}
 }

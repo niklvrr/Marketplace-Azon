@@ -38,7 +38,7 @@ func Run() {
 
 	mustRunMigrations(dbUrl, lgr)
 
-	r := router.NewRouter(db.Db)
+	r := router.NewRouter(db.Db, cfg.JWT)
 	lgr.Info("Starting server")
 
 	srv := &http.Server{

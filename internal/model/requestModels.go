@@ -53,10 +53,10 @@ type GetUserByEmailRequest struct {
 }
 
 type UpdateUserByIdRequest struct {
-	Id       int64   `json:"id"`
-	Name     *string `json:"name" binding:"omitempty,min=2,max=100"`
-	Email    *string `json:"email" binding:"omitempty,email"`
-	Password *string `json:"password" binding:"omitempty,min=6"`
+	Id       int64  `json:"id"`
+	Name     string `json:"name" binding:"omitempty,min=2,max=100"`
+	Email    string `json:"email" binding:"omitempty,email"`
+	Password string `json:"password" binding:"omitempty,min=6"`
 }
 
 type BlockUserByIdRequest struct {

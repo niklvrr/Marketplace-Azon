@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -117,9 +119,35 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*model.Use
 }
 
 func (r *UserRepo) UpdateUserById(ctx context.Context, user *model.User) error {
-	cmdTag, err := r.db.Exec(ctx, updateUserByIdQuery, user.Name, user.Email, user.Password, user.Id)
+	query := "UPDATE users SET "
+	var params []interface{}
+	paramsCount := 1
+
+	if user.Name != "" {
+		query += fmt.Sprintf("name = $%d, ", paramsCount)
+		params = append(params, user.Name)
+		paramsCount++
+	}
+
+	if user.Email != "" {
+		query += fmt.Sprintf("email = $%d, ", paramsCount)
+		params = append(params, user.Email)
+		paramsCount++
+	}
+
+	if user.Password != "" {
+		query += fmt.Sprintf("password = $%d, ", paramsCount)
+		params = append(params, user.Password)
+		paramsCount++
+	}
+
+	query = strings.TrimSuffix(query, ", ")
+	query += fmt.Sprintf(" WHERE id = $%d", paramsCount)
+	params = append(params, user.Id)
+
+	cmdTag, err := r.db.Exec(ctx, query, params...)
 	if err != nil {
-		return updateUserError
+		return err
 	}
 
 	if cmdTag.RowsAffected() == 0 {
