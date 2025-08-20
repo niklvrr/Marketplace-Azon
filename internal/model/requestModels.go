@@ -14,6 +14,7 @@ type CreateProductRequest struct {
 }
 
 type UpdateProductRequest struct {
+	Id          int64    `json:"id" binding:"required"`
 	CategoryId  *int64   `json:"category_id" binding:"required"`
 	Name        *string  `json:"name" binding:"required,min=2,max=100"`
 	Description *string  `json:"description" binding:"omitempty,max=5000"`

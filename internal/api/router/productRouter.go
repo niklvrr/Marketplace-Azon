@@ -14,8 +14,11 @@ func registerProductRouter(router *gin.RouterGroup, productHandler *handler.Prod
 		products.GET("/:id", productHandler.Get)
 		products.GET("", productHandler.GetAll)
 		products.GET("/search", productHandler.Search)
-		products.POST("", middleware.RequireRole("seller", "admin"), productHandler.Create)
-		products.PUT("/:id", middleware.RequireRole("seller", "admin"), productHandler.Update)
-		products.DELETE("/:id", middleware.RequireRole("seller", "admin"), productHandler.Delete)
+
+		seller := products.Group("/")
+		seller.Use(middleware.RequireRole("seller", "admin"))
+		products.POST("", productHandler.Create)
+		products.PUT("/:id", productHandler.Update)
+		products.DELETE("/:id", productHandler.Delete)
 	}
 }

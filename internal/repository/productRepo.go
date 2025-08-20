@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/niklvrr/myMarketplace/internal/model"
@@ -12,32 +13,32 @@ import (
 
 var (
 	createProductQuery = `
-		INSERT INTO products (seller_id, category_id, name, description, price, stock, status, created_at)
+		INSERT INTO products (seller_id, category_id, name, description, price, stock, is_approved, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id;`
 
 	getProductByIdQuery = `
-		SELECT seller_id, category_id, name, description, price, stock, status, created_at
+		SELECT seller_id, category_id, name, description, price, stock, is_approved, created_at
 		FROM products 
 		WHERE id = $1;`
 
 	updateProductByIdQuery = `
 		UPDATE products
-		SET seller_id = $1, category_id = $2, name = $3, description = $4, price = $5, stock = $6, status = $7, create_at = $8
-		WHERE id = $9;`
+		SET category_id = $1, name = $2, description = $3, price = $4, stock = $5,
+		WHERE id = $6;`
 
 	deleteProductByIdQuery = `DELETE FROM products WHERE id = $1;`
 
 	countQuery = `SELECT COUNT(*) FROM products;`
 
 	getAllProductsQuery = `
-		SELECT seller_id, category_id, name, description, price, stock, status, created_at
+		SELECT seller_id, category_id, name, description, price, stock, is_approved, created_at
 		FROM products
 		ORDER BY name
 		LIMIT $1 OFFSET $2;`
 
 	searchQuery = `
-		SELECT seller_id, category_id, name, description, price, stock, status, created_at
+		SELECT seller_id, category_id, name, description, price, stock, is_approved, created_at
 		FROM products
 		WHERE to_tsvector('simple', name || ' ' || coalesce(description, '')) @@ plainto_tsquery('simple', $1)`
 )
@@ -60,9 +61,19 @@ func NewProductRepo(db *pgxpool.Pool) *ProductRepo {
 }
 
 func (r *ProductRepo) CreateProduct(ctx context.Context, p *model.Product) error {
-	err := r.db.QueryRow(ctx, createProductQuery).Scan(&p.Id)
+	err := r.db.QueryRow(
+		ctx, createProductQuery,
+		p.SellerId,
+		p.CategoryId,
+		p.Name,
+		p.Description,
+		p.Price,
+		p.Stock,
+		false,
+		time.Now(),
+	).Scan(&p.Id)
 	if err != nil {
-		return createProductError
+		return err
 	}
 
 	return nil
@@ -91,14 +102,11 @@ func (r *ProductRepo) GetProductById(ctx context.Context, id int64) (*model.Prod
 func (r *ProductRepo) UpdateProductById(ctx context.Context, product *model.Product) error {
 	cmdTag, err := r.db.Exec(
 		ctx, updateProductByIdQuery,
-		product.SellerId,
 		product.CategoryId,
 		product.Name,
 		product.Description,
 		product.Price,
 		product.Stock,
-		product.CreatedAt,
-		product.Status,
 		product.Id)
 
 	if err != nil {

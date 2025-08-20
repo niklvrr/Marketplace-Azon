@@ -34,19 +34,13 @@ func (h *ProductHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	userIdStr, exist := ctx.Get("userId")
+	userId, exist := ctx.Get("user_id")
 	if !exist {
 		errs.RespondError(ctx, http.StatusUnauthorized, "unauthorized", "user is not authorized")
 		return
 	}
 
-	userId, ok := strconv.Atoi(userIdStr.(string))
-	if ok != nil {
-		errs.RespondError(ctx, http.StatusBadRequest, "validation_error", "invalid user id")
-		return
-	}
-
-	product, err := h.svc.Create(ctx, int64(userId), &req)
+	product, err := h.svc.Create(ctx, userId.(int64), &req)
 	if err != nil {
 		errs.RespondServiceError(ctx, err)
 		return
@@ -56,10 +50,10 @@ func (h *ProductHandler) Create(ctx *gin.Context) {
 }
 
 func (h *ProductHandler) Get(ctx *gin.Context) {
-	var req model.GetProductsRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		errs.RespondError(ctx, http.StatusBadRequest, "invalid_request", err.Error())
-		return
+	idStr := ctx.Param("id")
+	idInt, err := strconv.Atoi(idStr)
+	req := model.GetProductsRequest{
+		Id: int64(idInt),
 	}
 
 	product, err := h.svc.GetById(ctx, &req)
@@ -72,25 +66,23 @@ func (h *ProductHandler) Get(ctx *gin.Context) {
 }
 
 func (h *ProductHandler) Update(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	idInt, err := strconv.Atoi(idStr)
+
 	var req model.UpdateProductRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		errs.RespondError(ctx, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
+	req.Id = int64(idInt)
 
-	userIdStr, exist := ctx.Get("userId")
+	userId, exist := ctx.Get("user_id")
 	if !exist {
 		errs.RespondError(ctx, http.StatusUnauthorized, "unauthorized", "user is not authorized")
 		return
 	}
 
-	userId, ok := strconv.Atoi(userIdStr.(string))
-	if ok != nil {
-		errs.RespondError(ctx, http.StatusBadRequest, "validation_error", "invalid user id")
-		return
-	}
-
-	product, err := h.svc.UpdateById(ctx, int64(userId), &req)
+	product, err := h.svc.UpdateById(ctx, userId.(int64), &req)
 	if err != nil {
 		errs.RespondServiceError(ctx, err)
 		return
@@ -100,13 +92,13 @@ func (h *ProductHandler) Update(ctx *gin.Context) {
 }
 
 func (h *ProductHandler) Delete(ctx *gin.Context) {
-	var req model.DeleteProductRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		errs.RespondError(ctx, http.StatusBadRequest, "invalid_request", err.Error())
-		return
+	idStr := ctx.Param("id")
+	idInt, err := strconv.Atoi(idStr)
+	req := model.DeleteProductRequest{
+		Id: int64(idInt),
 	}
 
-	err := h.svc.DeleteById(ctx, &req)
+	err = h.svc.DeleteById(ctx, &req)
 	if err != nil {
 		errs.RespondServiceError(ctx, err)
 		return
