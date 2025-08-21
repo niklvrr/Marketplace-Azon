@@ -66,7 +66,7 @@ func (r *CategoryRepo) GetCategoryById(ctx context.Context, categoryId int64) (*
 	return category, nil
 }
 
-func (r *CategoryRepo) UpdateCategory(ctx context.Context, category model.Category) error {
+func (r *CategoryRepo) UpdateCategory(ctx context.Context, category *model.Category) error {
 	cmdTag, err := r.db.Exec(ctx, updateCategoryByIdQuery, category.Name, category.Description, category.Id)
 	if err != nil {
 		return fmt.Errorf("%w: %w", updateCategoryError, err)
