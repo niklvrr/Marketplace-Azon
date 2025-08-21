@@ -73,7 +73,7 @@ func (r *ProductRepo) CreateProduct(ctx context.Context, p *model.Product) error
 		time.Now(),
 	).Scan(&p.Id)
 	if err != nil {
-		return fmt.Errorf("%w: %w", createProductError, err)
+		return err
 	}
 
 	return nil
@@ -93,7 +93,7 @@ func (r *ProductRepo) GetProductById(ctx context.Context, id int64) (*model.Prod
 			&product.CreatedAt)
 
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", productNotFound, err)
+		return nil, productNotFound
 	}
 
 	return product, nil
@@ -110,11 +110,11 @@ func (r *ProductRepo) UpdateProductById(ctx context.Context, product *model.Prod
 		product.Id)
 
 	if err != nil {
-		return fmt.Errorf("%w: %w", updateProductError, err)
+		return updateProductError
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return fmt.Errorf("%w: %w", productNotFound, err)
+		return productNotFound
 	}
 
 	return nil
@@ -123,11 +123,11 @@ func (r *ProductRepo) UpdateProductById(ctx context.Context, product *model.Prod
 func (r *ProductRepo) DeleteProductById(ctx context.Context, id int64) error {
 	cmtTag, err := r.db.Exec(ctx, deleteProductByIdQuery, id)
 	if err != nil {
-		return fmt.Errorf("%w: %w", deleteProductError, err)
+		return deleteProductError
 	}
 
 	if cmtTag.RowsAffected() == 0 {
-		return fmt.Errorf("%w: %w", productNotFound, err)
+		return productNotFound
 	}
 
 	return nil
@@ -136,7 +136,7 @@ func (r *ProductRepo) DeleteProductById(ctx context.Context, id int64) error {
 func (r *ProductRepo) GetAllProducts(ctx context.Context, offset, limit int) (*[]model.Product, int64, error) {
 	rows, err := r.db.Query(ctx, getAllProductsQuery, limit, offset)
 	if err != nil {
-		return &[]model.Product{}, 0, fmt.Errorf("%w: %w", getAllProductsError, err)
+		return &[]model.Product{}, 0, getAllProductsError
 	}
 	defer rows.Close()
 
@@ -154,20 +154,20 @@ func (r *ProductRepo) GetAllProducts(ctx context.Context, offset, limit int) (*[
 			&product.CreatedAt)
 
 		if err != nil {
-			return &[]model.Product{}, 0, fmt.Errorf("%w: %w", getAllProductsError, err)
+			return &[]model.Product{}, 0, getAllProductsError
 		}
 
 		products = append(products, product)
 	}
 
 	if err := rows.Err(); err != nil {
-		return &[]model.Product{}, 0, fmt.Errorf("%w(%w): %w", getAllProductsError, rowsIterationError, err)
+		return &[]model.Product{}, 0, rowsIterationError
 	}
 
 	var total int64
 	err = r.db.QueryRow(ctx, countQuery).Scan(&total)
 	if err != nil {
-		return &[]model.Product{}, 0, fmt.Errorf("%w: %w", getAllUsersError, err)
+		return &[]model.Product{}, 0, getAllProductsError
 	}
 
 	return &products, total, nil
@@ -201,7 +201,7 @@ func (r *ProductRepo) SearchProducts(
 
 	rows, err := r.db.Query(ctx, sql, args...)
 	if err != nil {
-		return nil, 0, fmt.Errorf("%w: %w", searchProductsError, err)
+		return nil, 0, searchProductsError
 	}
 	defer rows.Close()
 
@@ -220,14 +220,14 @@ func (r *ProductRepo) SearchProducts(
 		)
 
 		if err != nil {
-			return &[]model.Product{}, 0, fmt.Errorf("%w: %w", searchProductsError, err)
+			return &[]model.Product{}, 0, searchProductsError
 		}
 
 		products = append(products, product)
 	}
 
 	if err := rows.Err(); err != nil {
-		return &[]model.Product{}, 0, fmt.Errorf("%w(%w): %w", searchProductsError, rowsIterationError, err)
+		return &[]model.Product{}, 0, rowsIterationError
 	}
 
 	var where []string
@@ -265,7 +265,7 @@ func (r *ProductRepo) SearchProducts(
 	var total int64
 	err = r.db.QueryRow(ctx, q, countArgs...).Scan(&total)
 	if err != nil {
-		return &[]model.Product{}, 0, fmt.Errorf("%w: %w", searchProductsError, err)
+		return &[]model.Product{}, 0, searchProductsError
 	}
 
 	return &products, total, nil
