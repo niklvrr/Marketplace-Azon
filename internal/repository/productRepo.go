@@ -73,7 +73,7 @@ func (r *ProductRepo) CreateProduct(ctx context.Context, p *model.Product) error
 		time.Now(),
 	).Scan(&p.Id)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %s", createProductError.Error(), err.Error())
 	}
 
 	return nil
