@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/niklvrr/myMarketplace/internal/model"
@@ -49,7 +50,7 @@ func (r *CategoryRepo) CreateCategory(ctx context.Context, category *model.Categ
 		Scan(&category.Id)
 
 	if err != nil {
-		return createCategoryError
+		return fmt.Errorf("%w: %w", createCategoryError, err)
 	}
 
 	return nil
@@ -59,7 +60,7 @@ func (r *CategoryRepo) GetCategoryById(ctx context.Context, categoryId int64) (*
 	category := new(model.Category)
 	err := r.db.QueryRow(ctx, getCategoryByIdQuery, categoryId).Scan(&category.Id, &category.Name, &category.Description)
 	if err != nil {
-		return &model.Category{}, categoryNotFoundError
+		return &model.Category{}, fmt.Errorf("%w: %w", categoryNotFoundError, err)
 	}
 
 	return category, nil
@@ -68,11 +69,11 @@ func (r *CategoryRepo) GetCategoryById(ctx context.Context, categoryId int64) (*
 func (r *CategoryRepo) UpdateCategory(ctx context.Context, category model.Category) error {
 	cmdTag, err := r.db.Exec(ctx, updateCategoryByIdQuery, category.Name, category.Description, category.Id)
 	if err != nil {
-		return updateCategoryError
+		return fmt.Errorf("%w: %w", updateCategoryError, err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return categoryNotFoundError
+		return fmt.Errorf("%w: %w", updateCategoryError, categoryNotFoundError)
 	}
 
 	return nil
@@ -81,11 +82,11 @@ func (r *CategoryRepo) UpdateCategory(ctx context.Context, category model.Catego
 func (r *CategoryRepo) DeleteCategory(ctx context.Context, categoryId int64) error {
 	cmdTag, err := r.db.Exec(ctx, deleteCategoryByIdQuery, categoryId)
 	if err != nil {
-		return deleteCategoryError
+		return fmt.Errorf("%w: %w", deleteCategoryError, err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return categoryNotFoundError
+		return fmt.Errorf("%w: %w", deleteCategoryError, categoryNotFoundError)
 	}
 
 	return nil
@@ -94,7 +95,7 @@ func (r *CategoryRepo) DeleteCategory(ctx context.Context, categoryId int64) err
 func (r *CategoryRepo) GetAllCategories(ctx context.Context) (*[]model.Category, error) {
 	rows, err := r.db.Query(ctx, getAllCategoriesQuery)
 	if err != nil {
-		return nil, getAllCategoriesError
+		return nil, fmt.Errorf("%w: %w", getAllCategoriesError, err)
 	}
 	defer rows.Close()
 
@@ -103,14 +104,14 @@ func (r *CategoryRepo) GetAllCategories(ctx context.Context) (*[]model.Category,
 		category := new(model.Category)
 		err := rows.Scan(&category.Id, &category.Name, &category.Description)
 		if err != nil {
-			return nil, getAllCategoriesError
+			return nil, fmt.Errorf("%w: %w", getAllCategoriesError, err)
 		}
 
 		categories = append(categories, *category)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, rowsIterationError
+		return nil, fmt.Errorf("%w(%w): %w", getAllCategoriesError, rowsIterationError, err)
 	}
 
 	return &categories, nil

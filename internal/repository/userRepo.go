@@ -151,7 +151,7 @@ func (r *UserRepo) UpdateUserById(ctx context.Context, user *model.User) error {
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return fmt.Errorf("%w: %w", userNotFoundError, err)
+		return fmt.Errorf("%w: %w", updateUserError, userNotFoundError)
 	}
 
 	return nil
@@ -164,7 +164,7 @@ func (r *UserRepo) BlockUserById(ctx context.Context, userId int64) error {
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return fmt.Errorf("%w: %w", userNotFoundError, err)
+		return fmt.Errorf("%w: %w", blockExecError, userNotFoundError)
 	}
 
 	return nil
@@ -177,7 +177,7 @@ func (r *UserRepo) UnBlockUserById(ctx context.Context, userId int64) error {
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return fmt.Errorf("%w: %w", userNotFoundError, err)
+		return fmt.Errorf("%w: %w", unBlockExecError, userNotFoundError)
 	}
 
 	return nil
@@ -223,7 +223,7 @@ func (r *UserRepo) UpdateUserRole(ctx context.Context, userId int64, newRole str
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return fmt.Errorf("%w: %w", userNotFoundError, err)
+		return fmt.Errorf("%w: %w", updateUserRoleError, userNotFoundError)
 	}
 
 	return nil
@@ -236,7 +236,7 @@ func (r *UserRepo) ApproveProduct(ctx context.Context, productId int64) error {
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return fmt.Errorf("%w: %w", productNotFound, err)
+		return fmt.Errorf("%w: %w", approveProductError, productNotFound)
 	}
 
 	return nil
