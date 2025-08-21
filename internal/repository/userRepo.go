@@ -44,7 +44,7 @@ var (
 )
 
 var (
-	createUserError     = errors.New("error creating user я того рот ебал")
+	createUserError     = errors.New("error creating user")
 	userNotFoundError   = errors.New("user not found")
 	updateUserError     = errors.New("error updating user")
 	blockExecError      = errors.New("error executing blocking user by id")
@@ -74,7 +74,7 @@ func (r *UserRepo) CreateUser(ctx context.Context, user *model.User) error {
 	).Scan(&user.Id)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", createUserError, err)
 	}
 
 	return nil
@@ -93,7 +93,7 @@ func (r *UserRepo) GetUserById(ctx context.Context, userId int64) (*model.User, 
 			&user.CreateAt)
 
 	if err != nil {
-		return &model.User{}, userNotFoundError
+		return &model.User{}, fmt.Errorf("%w: %w", userNotFoundError, err)
 	}
 
 	return user, nil
@@ -112,7 +112,7 @@ func (r *UserRepo) GetUserByEmail(ctx context.Context, email string) (*model.Use
 			&user.CreateAt)
 
 	if err != nil {
-		return &model.User{}, userNotFoundError
+		return &model.User{}, fmt.Errorf("%w: %w", userNotFoundError, err)
 	}
 
 	return user, nil
@@ -147,11 +147,11 @@ func (r *UserRepo) UpdateUserById(ctx context.Context, user *model.User) error {
 
 	cmdTag, err := r.db.Exec(ctx, query, params...)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", updateUserError, err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return rowsIterationError
+		return fmt.Errorf("%w: %w", userNotFoundError, err)
 	}
 
 	return nil
@@ -160,11 +160,11 @@ func (r *UserRepo) UpdateUserById(ctx context.Context, user *model.User) error {
 func (r *UserRepo) BlockUserById(ctx context.Context, userId int64) error {
 	cmdTag, err := r.db.Exec(ctx, blockUserByIdQuery, userId)
 	if err != nil {
-		return blockExecError
+		return fmt.Errorf("%w: %w", blockExecError, err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return userNotFoundError
+		return fmt.Errorf("%w: %w", userNotFoundError, err)
 	}
 
 	return nil
@@ -173,11 +173,11 @@ func (r *UserRepo) BlockUserById(ctx context.Context, userId int64) error {
 func (r *UserRepo) UnBlockUserById(ctx context.Context, userId int64) error {
 	cmdTag, err := r.db.Exec(ctx, unBlockUserByIdQuery, userId)
 	if err != nil {
-		return unBlockExecError
+		return fmt.Errorf("%w: %w", unBlockExecError, err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return userNotFoundError
+		return fmt.Errorf("%w: %w", userNotFoundError, err)
 	}
 
 	return nil
@@ -186,7 +186,7 @@ func (r *UserRepo) UnBlockUserById(ctx context.Context, userId int64) error {
 func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 	rows, err := r.db.Query(ctx, getAllUsersQuery)
 	if err != nil {
-		return []model.User{}, getAllUsersError
+		return []model.User{}, fmt.Errorf("%w: %w", getAllUsersError, err)
 	}
 	defer rows.Close()
 
@@ -204,13 +204,13 @@ func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 		)
 
 		if err != nil {
-			return []model.User{}, getAllUsersError
+			return []model.User{}, fmt.Errorf("%w: %w", getAllUsersError, err)
 		}
 		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {
-		return []model.User{}, rowsIterationError
+		return []model.User{}, fmt.Errorf("%w(%w): %w", getAllUsersError, rowsIterationError, err)
 	}
 
 	return users, nil
@@ -219,11 +219,11 @@ func (r *UserRepo) GetAllUsers(ctx context.Context) ([]model.User, error) {
 func (r *UserRepo) UpdateUserRole(ctx context.Context, userId int64, newRole string) error {
 	cmdTag, err := r.db.Exec(ctx, updateUserRoleQuery, newRole, userId)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", updateUserRoleError, err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return userNotFoundError
+		return fmt.Errorf("%w: %w", userNotFoundError, err)
 	}
 
 	return nil
@@ -232,11 +232,11 @@ func (r *UserRepo) UpdateUserRole(ctx context.Context, userId int64, newRole str
 func (r *UserRepo) ApproveProduct(ctx context.Context, productId int64) error {
 	cmdTag, err := r.db.Exec(ctx, approveProductQuery, productId)
 	if err != nil {
-		return approveProductError
+		return fmt.Errorf("%w: %w", approveProductError, err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return productNotFound
+		return fmt.Errorf("%w: %w", productNotFound, err)
 	}
 
 	return nil
