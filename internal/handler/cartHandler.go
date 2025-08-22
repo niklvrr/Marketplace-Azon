@@ -12,7 +12,7 @@ import (
 
 type ICartService interface {
 	GetCartByUserId(ctx context.Context, req *model.GetCartByUserIdRequest) (*model.CartResponse, error)
-	GetCartItemsByCartId(ctx context.Context, req *model.GetCartItemsByCartIdRequest) ([]*model.CartItemResponse, error)
+	GetCartItemsByCartId(ctx context.Context, req *model.GetCartItemsByCartIdRequest) (*[]model.CartItemResponse, error)
 	AddItem(ctx context.Context, req *model.AddItemRequest) (int64, error)
 	RemoveItem(ctx context.Context, req *model.RemoveItemRequest) error
 	ClearCart(ctx context.Context, req *model.ClearCartRequest) error

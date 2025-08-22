@@ -18,7 +18,7 @@ func NewRouter(db *pgxpool.Pool, JWTConfig config.JWTConfig) http.Handler {
 	userRepo := repository.NewUserRepo(db)
 	categoryRepo := repository.NewCategoryRepo(db)
 	cartRepo := repository.NewCartRepo(db)
-	//orderRepo := repository.NewOrderRepo(db)
+	orderRepo := repository.NewOrderRepo(db)
 
 	// JWTManager init
 	jwtManager := jwt.NewJWTManager(JWTConfig.Secret, JWTConfig.Expiration)
@@ -28,12 +28,14 @@ func NewRouter(db *pgxpool.Pool, JWTConfig config.JWTConfig) http.Handler {
 	userService := service.NewUserService(userRepo, jwtManager)
 	categoryService := service.NewCategoriesService(categoryRepo)
 	cartService := service.NewCartService(cartRepo)
+	orderService := service.NewOrderService(orderRepo)
 
 	// Handler init
 	productHandler := handler.NewProductsHandler(productService)
 	userHandler := handler.NewUserHandler(userService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	cartHandler := handler.NewCartHandler(cartService)
+	orderHandler := handler.NewOrderHandler(orderService)
 
 	r := gin.Default()
 
@@ -44,6 +46,7 @@ func NewRouter(db *pgxpool.Pool, JWTConfig config.JWTConfig) http.Handler {
 	registerUserRouter(v1, userHandler, jwtManager)
 	registerCategoriesRouter(v1, categoryHandler, jwtManager)
 	registerCartRouter(v1, cartHandler, jwtManager)
+	registerOrderRouter(v1, orderHandler, jwtManager)
 
 	return r
 }
