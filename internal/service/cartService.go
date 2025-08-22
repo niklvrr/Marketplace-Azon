@@ -8,7 +8,7 @@ import (
 
 type ICartRepository interface {
 	GetCartByUserId(ctx context.Context, userId int64) (*model.Cart, error)
-	GetCartItemsByCartId(ctx context.Context, cartId int64) ([]*model.CartItem, error)
+	GetCartItemsByCartId(ctx context.Context, cartId int64) (*[]model.CartItem, error)
 	AddItem(ctx context.Context, cartId, productId int64, quantity int) (int64, error)
 	RemoveItem(ctx context.Context, cartId, id int64) error
 	ClearCart(ctx context.Context, cartId int64) error
@@ -33,16 +33,16 @@ func (s *CartService) GetCartByUserId(ctx context.Context, req *model.GetCartByU
 	}, nil
 }
 
-func (s *CartService) GetCartItemsByCartId(ctx context.Context, req *model.GetCartItemsByCartIdRequest) ([]*model.CartItemResponse, error) {
+func (s *CartService) GetCartItemsByCartId(ctx context.Context, req *model.GetCartItemsByCartIdRequest) (*[]model.CartItemResponse, error) {
 	cartId := req.CartId
 	cartItems, err := s.repo.GetCartItemsByCartId(ctx, cartId)
 	if err != nil {
 		return nil, err
 	}
 
-	var items []*model.CartItemResponse
-	for _, item := range cartItems {
-		items = append(items, &model.CartItemResponse{
+	var items []model.CartItemResponse
+	for _, item := range *cartItems {
+		items = append(items, model.CartItemResponse{
 			Id:        item.Id,
 			CartId:    cartId,
 			ProductId: item.ProductId,
@@ -50,7 +50,7 @@ func (s *CartService) GetCartItemsByCartId(ctx context.Context, req *model.GetCa
 		})
 	}
 
-	return items, nil
+	return &items, nil
 }
 func (s *CartService) AddItem(ctx context.Context, req *model.AddItemRequest) (int64, error) {
 	itemId, err := s.repo.AddItem(ctx, req.CartId, req.ProductId, req.Quantity)

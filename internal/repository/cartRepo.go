@@ -61,14 +61,14 @@ func (r *CartRepo) GetCartByUserId(ctx context.Context, userId int64) (*model.Ca
 	return cart, nil
 }
 
-func (r *CartRepo) GetCartItemsByCartId(ctx context.Context, cartId int64) ([]*model.CartItem, error) {
+func (r *CartRepo) GetCartItemsByCartId(ctx context.Context, cartId int64) (*[]model.CartItem, error) {
 	rows, err := r.db.Query(ctx, getCartItemsByCartIdQuery, cartId)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", getCartItemsByCartIdError, err)
 	}
 	defer rows.Close()
 
-	var cartItems []*model.CartItem
+	var cartItems []model.CartItem
 	for rows.Next() {
 		var cartItem model.CartItem
 		err = rows.Scan(
@@ -81,14 +81,14 @@ func (r *CartRepo) GetCartItemsByCartId(ctx context.Context, cartId int64) ([]*m
 			return nil, fmt.Errorf("%w: %w", getCartItemsByCartIdQuery, err)
 		}
 
-		cartItems = append(cartItems, &cartItem)
+		cartItems = append(cartItems, cartItem)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("%w(%w): %w", getCartItemsByCartIdError, rowsIterationError, err)
 	}
 
-	return cartItems, nil
+	return &cartItems, nil
 }
 
 func (r *CartRepo) AddItem(ctx context.Context, cartId, productId int64, quantity int) (int64, error) {
