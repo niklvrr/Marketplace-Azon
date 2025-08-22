@@ -81,12 +81,12 @@ type ApproveProductRequest struct {
 type AddItemRequest struct {
 	CartId    int64 `json:"cart_id" binding:"required"`
 	ProductId int64 `json:"product_id" binding:"required"`
-	Quantity  int64 `json:"quantity" binding:"required"`
+	Quantity  int   `json:"quantity" binding:"required"`
 }
 
 type RemoveItemRequest struct {
-	CartId    int64 `json:"cart_id" binding:"required"`
-	ProductId int64 `json:"product_id" binding:"required"`
+	Id     int64 `json:"id" binding:"required"`
+	CartId int64 `json:"cart_id" binding:"required"`
 }
 
 type ClearCartRequest struct {
@@ -95,6 +95,10 @@ type ClearCartRequest struct {
 
 type GetCartByUserIdRequest struct {
 	UserId int64 `json:"user_id" binding:"required"`
+}
+
+type GetCartItemsByCartIdRequest struct {
+	CartId int64 `json:"cart_id" binding:"required"`
 }
 
 // Order model

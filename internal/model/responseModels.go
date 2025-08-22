@@ -18,8 +18,7 @@ type UserResponse struct {
 }
 
 type CartResponse struct {
-	Id     int64 `json:"id"`
-	UserId int64 `json:"user_id"`
+	Id int64 `json:"id"`
 }
 
 type CartItemResponse struct {
