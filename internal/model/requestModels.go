@@ -103,11 +103,29 @@ type GetCartItemsByCartIdRequest struct {
 
 // Order model
 type CreateOrderRequest struct {
-	Status string  `json:"status" binding:"required"`
-	Total  float64 `json:"total" binding:"required"`
+	UserId     int64              `json:"user_id" binding:"required"`
+	OrderItems []OrderItemRequest `json:"order_items" binding:"required"`
+}
+
+type OrderItemRequest struct {
+	ProductId int64   `json:"product_id" binding:"required"`
+	Quantity  int     `json:"quantity" binding:"required"`
+	Price     float64 `json:"price" binding:"required,gt=0"`
+}
+
+type GetOrdersByUserIdRequest struct {
+	UserId int64 `json:"user_id" binding:"required"`
 }
 
 type GetOrderByIdRequest struct {
+	Id int64 `json:"id" binding:"required"`
+}
+
+type GetOrderItemsByOrderIdRequest struct {
+	OrderId int64 `json:"order_id" binding:"required"`
+}
+
+type DeleteOrderByIdRequest struct {
 	Id int64 `json:"id" binding:"required"`
 }
 

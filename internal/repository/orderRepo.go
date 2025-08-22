@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/niklvrr/myMarketplace/internal/model"
@@ -13,7 +14,12 @@ var (
 	createOrderQuery = `
 		INSERT INTO orders (user_id, status, total, create_at)
 		VALUES ($1, $2, $3, $4)
-		RETURNING order_id`
+		RETURNING id`
+
+	createOrderItemQuery = `
+		INSERT INTO order_items (order_id, product_id, quantity, price)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id`
 
 	getOrdersByUserIdQuery = `
 		SELECT order_id, status, total, create_at
@@ -35,6 +41,7 @@ var (
 
 var (
 	createOrderError            = errors.New("error creating order")
+	createOrderItemError        = errors.New("error creating orderItem")
 	orderNotFound               = errors.New("order not found")
 	getOrdersByUserIdError      = errors.New("error getting orders by user id")
 	getOrderByIdError           = errors.New("error getting order by id")
@@ -50,21 +57,39 @@ func NewOrderRepo(db *pgxpool.Pool) *OrderRepo {
 	return &OrderRepo{db: db}
 }
 
-func (r *OrderRepo) CreateOrder(ctx context.Context, o *model.Order, items []model.OrderItem) error {
-	for _, item := range items {
+func (r *OrderRepo) CreateOrder(ctx context.Context, userId int64, items *[]model.OrderItem) (int64, error) {
+	var total float64
+	for _, orderItem := range *items {
+		total += orderItem.Price
+	}
+
+	var orderId int64
+	for _, item := range *items {
 		err := r.db.QueryRow(
 			ctx, createOrderQuery,
-			o.UserId,
-			o.Status,
-			o.Total,
-			o.CreateAt).Scan(&item.OrderId)
+			userId,
+			"pending",
+			total,
+			time.Now()).Scan(&orderId)
 
 		if err != nil {
-			return fmt.Errorf("%w: %w", createOrderError, err)
+			return 0, fmt.Errorf("%w: %w", createOrderError, err)
+		}
+
+		err = r.db.QueryRow(
+			ctx, createOrderItemQuery,
+			orderId,
+			item.ProductId,
+			item.Quantity,
+			item.Price,
+		).Scan(&item.Id)
+
+		if err != nil {
+			return 0, fmt.Errorf("%w: %w", createOrderItemError, err)
 		}
 	}
 
-	return nil
+	return orderId, nil
 }
 
 func (r *OrderRepo) GetOrdersByUserId(ctx context.Context, userId int64) (*[]model.Order, error) {
