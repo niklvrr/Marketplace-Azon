@@ -133,8 +133,8 @@ func (h *UserHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	blockKey := "blocked_user:" + strconv.Itoa(int(id.(int64)))
-	req := model.LogoutRequest{BlockKey: blockKey}
+	blacklistKey := "blacklist_user:" + strconv.Itoa(int(id.(int64)))
+	req := model.LogoutRequest{BlockKey: blacklistKey}
 	err := h.svc.Logout(c, &req)
 	if err != nil {
 		errs.RespondServiceError(c, err)

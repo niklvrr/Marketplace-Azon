@@ -2,11 +2,13 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/niklvrr/myMarketplace/internal/errs"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 )
 
 func RequireRole(roles ...string) gin.HandlerFunc {
@@ -32,7 +34,7 @@ func RequireRole(roles ...string) gin.HandlerFunc {
 	}
 }
 
-func JWTRegister(jwtManager *jwt.JWTManager) gin.HandlerFunc {
+func JWTRegister(jwtManager *jwt.JWTManager, cache *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -51,6 +53,34 @@ func JWTRegister(jwtManager *jwt.JWTManager) gin.HandlerFunc {
 		claims, err := jwtManager.ParseToken(tokenString)
 		if err != nil {
 			errs.RespondError(c, http.StatusForbidden, "forbidden", err.Error())
+			c.Abort()
+			return
+		}
+
+		blacklistKey := "blacklist_user:" + strconv.Itoa(int(claims.UserId))
+		exist, err := cache.Exists(c.Request.Context(), blacklistKey).Result()
+		if err != nil {
+			errs.RespondError(c, http.StatusUnauthorized, "unauthorized", err.Error())
+			c.Abort()
+			return
+		}
+
+		if exist > 0 {
+			errs.RespondError(c, http.StatusForbidden, "forbidden", "token has been revoked")
+			c.Abort()
+			return
+		}
+
+		blockKey := "blocked_user:" + strconv.Itoa(int(claims.UserId))
+		exist, err = cache.Exists(c.Request.Context(), blockKey).Result()
+		if err != nil {
+			errs.RespondError(c, http.StatusUnauthorized, "unauthorized", err.Error())
+			c.Abort()
+			return
+		}
+
+		if exist > 0 {
+			errs.RespondError(c, http.StatusForbidden, "forbidden", "user has been blocked")
 			c.Abort()
 			return
 		}

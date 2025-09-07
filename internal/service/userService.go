@@ -2,13 +2,18 @@ package service
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strconv"
 
 	"github.com/niklvrr/myMarketplace/internal/model"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	wrongPasswordError = errors.New("wrong password")
+	blockedUserError   = errors.New("user has been blocked")
 )
 
 type IUserRepository interface {
@@ -70,7 +75,11 @@ func (s *UserService) Login(ctx context.Context, req *model.LoginRequest) (strin
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
 	if err != nil {
-		return "", fmt.Errorf("wrong password")
+		return "", wrongPasswordError
+	}
+
+	if user.IsActive == false {
+		return "", blockedUserError
 	}
 
 	return s.jwtManager.GenerateToken(user.Id, user.Role)
