@@ -133,7 +133,7 @@ func (h *UserHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	blockKey := "blocked_user:" + strconv.Itoa(id.(int))
+	blockKey := "blocked_user:" + strconv.Itoa(int(id.(int64)))
 	req := model.LogoutRequest{BlockKey: blockKey}
 	err := h.svc.Logout(c, &req)
 	if err != nil {
@@ -158,7 +158,7 @@ func (h *UserHandler) BlockUserById(c *gin.Context) {
 		return
 	}
 
-	blockKey := "blocked_user:" + strconv.Itoa(id.(int))
+	blockKey := "blocked_user:" + strconv.Itoa(int(id.(int64)))
 	logoutReq := model.LogoutRequest{BlockKey: blockKey}
 	err = h.svc.Logout(c, &logoutReq)
 	if err != nil {

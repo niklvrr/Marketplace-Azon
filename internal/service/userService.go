@@ -29,9 +29,10 @@ type UserService struct {
 	jwtManager *jwt.JWTManager
 }
 
-func NewUserService(repo IUserRepository, jwtManager *jwt.JWTManager) *UserService {
+func NewUserService(repo IUserRepository, cache *redis.Client, jwtManager *jwt.JWTManager) *UserService {
 	return &UserService{
 		repo:       repo,
+		cache:      cache,
 		jwtManager: jwtManager,
 	}
 }

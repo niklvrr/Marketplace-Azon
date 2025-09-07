@@ -7,18 +7,20 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRDB(addr string, logger *slog.Logger) *redis.Client {
-	rdb := redis.NewClient(&redis.Options{
+var CacheDB *redis.Client
+
+func NewRDB(addr string, logger *slog.Logger) {
+	CacheDB = redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "",
 		DB:       0,
 	})
 
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
+	if err := CacheDB.Ping(context.Background()).Err(); err != nil {
 		logger.Error("redis db init error", err)
-		return nil
+		return
 	}
 
 	logger.Info("redis db init ok")
-	return rdb
+	return
 }

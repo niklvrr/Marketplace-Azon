@@ -10,9 +10,10 @@ import (
 	"github.com/niklvrr/myMarketplace/internal/repository"
 	"github.com/niklvrr/myMarketplace/internal/service"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 )
 
-func NewRouter(db *pgxpool.Pool, JWTConfig config.JWTConfig) http.Handler {
+func NewRouter(db *pgxpool.Pool, rdb *redis.Client, JWTConfig config.JWTConfig) http.Handler {
 	// Repository init
 	productRepo := repository.NewProductRepo(db)
 	userRepo := repository.NewUserRepo(db)
@@ -25,7 +26,7 @@ func NewRouter(db *pgxpool.Pool, JWTConfig config.JWTConfig) http.Handler {
 
 	// Service init
 	productService := service.NewProductService(productRepo)
-	userService := service.NewUserService(userRepo, jwtManager)
+	userService := service.NewUserService(userRepo, rdb, jwtManager)
 	categoryService := service.NewCategoriesService(categoryRepo)
 	cartService := service.NewCartService(cartRepo)
 	orderService := service.NewOrderService(orderRepo)

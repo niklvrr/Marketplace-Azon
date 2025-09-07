@@ -39,7 +39,7 @@ func Run() {
 
 	rdb.NewRDB(cfg.Cache.Address, lgr)
 
-	r := router.NewRouter(db.Db, cfg.JWT)
+	r := router.NewRouter(db.Db, rdb.CacheDB, cfg.JWT)
 	lgr.Info("Starting server")
 
 	srv := &http.Server{
