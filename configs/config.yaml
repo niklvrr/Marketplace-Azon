@@ -17,7 +17,7 @@ database:
   max_connections: 20
 
 cache:
-  addr: "marketplace-cache:6379"
+  addr: "cache:6379"
 
 jwt:
   secret: ""

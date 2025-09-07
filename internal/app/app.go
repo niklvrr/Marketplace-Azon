@@ -3,7 +3,6 @@ package app
 import (
 	"errors"
 	"fmt"
-	"github.com/niklvrr/myMarketplace/internal/rdb"
 	"log"
 	"log/slog"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 	"github.com/niklvrr/myMarketplace/internal/api/router"
 	"github.com/niklvrr/myMarketplace/internal/config"
 	"github.com/niklvrr/myMarketplace/internal/db"
+	"github.com/niklvrr/myMarketplace/internal/rdb"
 	"github.com/niklvrr/myMarketplace/pkg/logger"
 )
 

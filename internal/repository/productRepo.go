@@ -89,7 +89,7 @@ func (r *ProductRepo) GetProductById(ctx context.Context, id int64) (*model.Prod
 			&product.Description,
 			&product.Price,
 			&product.Stock,
-			&product.Status,
+			&product.IsApproved,
 			&product.CreatedAt)
 
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *ProductRepo) GetAllProducts(ctx context.Context, offset, limit int) (*[
 			&product.Description,
 			&product.Price,
 			&product.Stock,
-			&product.Status,
+			&product.IsApproved,
 			&product.CreatedAt)
 
 		if err != nil {
@@ -215,7 +215,7 @@ func (r *ProductRepo) SearchProducts(
 			&product.Description,
 			&product.Price,
 			&product.Stock,
-			&product.Status,
+			&product.IsApproved,
 			&product.CreatedAt,
 		)
 

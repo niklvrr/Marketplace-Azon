@@ -2,8 +2,9 @@ package rdb
 
 import (
 	"context"
-	"github.com/redis/go-redis/v9"
 	"log/slog"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func NewRDB(addr string, logger *slog.Logger) *redis.Client {
@@ -18,5 +19,6 @@ func NewRDB(addr string, logger *slog.Logger) *redis.Client {
 		return nil
 	}
 
+	logger.Info("redis db init ok")
 	return rdb
 }
