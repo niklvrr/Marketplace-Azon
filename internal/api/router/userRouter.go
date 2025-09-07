@@ -20,6 +20,7 @@ func registerUserRouter(router *gin.RouterGroup, userHandler *handler.UserHandle
 			auth.PUT("", userHandler.UpdateUserById)
 			auth.POST("", userHandler.GetUserByEmail)
 			auth.PUT("/role", userHandler.UpdateUserRole)
+			auth.POST("/logout", userHandler.Logout)
 
 			admin := auth.Group("/admin")
 			admin.Use(middleware.RequireRole("admin"))

@@ -46,7 +46,7 @@ type LoginRequest struct {
 }
 
 type GetUserByIdRequest struct {
-	Id int64 `json:"id" binding:"required,email"`
+	Id int64 `json:"id" binding:"required"`
 }
 
 type GetUserByEmailRequest struct {
@@ -54,10 +54,14 @@ type GetUserByEmailRequest struct {
 }
 
 type UpdateUserByIdRequest struct {
-	Id       int64  `json:"id"`
+	Id       int64  `json:"id" binding:"required"`
 	Name     string `json:"name" binding:"omitempty,min=2,max=100"`
 	Email    string `json:"email" binding:"omitempty,email"`
 	Password string `json:"password" binding:"omitempty,min=6"`
+}
+
+type LogoutRequest struct {
+	BlockKey string `json:"block_key" binding:"required,min=13,max=100"`
 }
 
 type BlockUserByIdRequest struct {

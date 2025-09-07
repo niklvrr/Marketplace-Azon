@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/niklvrr/myMarketplace/internal/model"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -23,6 +25,7 @@ type IUserRepository interface {
 
 type UserService struct {
 	repo       IUserRepository
+	cache      *redis.Client
 	jwtManager *jwt.JWTManager
 }
 
@@ -131,6 +134,15 @@ func (s *UserService) UpdateUserById(ctx context.Context, req *model.UpdateUserB
 	}, nil
 }
 
+func (s *UserService) Logout(ctx context.Context, req *model.LogoutRequest) error {
+	err := s.cache.Set(ctx, req.BlockKey, "true", 0).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *UserService) BlockUserById(ctx context.Context, req *model.BlockUserByIdRequest) error {
 	err := s.repo.BlockUserById(ctx, req.Id)
 	if err != nil {
@@ -141,7 +153,14 @@ func (s *UserService) BlockUserById(ctx context.Context, req *model.BlockUserByI
 }
 
 func (s *UserService) UnblockUserById(ctx context.Context, req *model.UnblockUserByIdRequest) error {
-	err := s.repo.UnBlockUserById(ctx, req.Id)
+	id := req.Id
+	err := s.repo.UnBlockUserById(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	blockKey := "blocked_user:" + strconv.Itoa(int(id))
+	err = s.cache.Del(ctx, blockKey).Err()
 	if err != nil {
 		return err
 	}

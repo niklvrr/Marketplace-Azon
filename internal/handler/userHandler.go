@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/niklvrr/myMarketplace/internal/errs"
@@ -20,6 +21,7 @@ type IUserService interface {
 	GetAllUsers(ctx context.Context) ([]model.UserResponse, error)
 	UpdateUserRole(ctx context.Context, req *model.UpdateUserRoleRequest) error
 	ApproveProduct(ctx context.Context, req *model.ApproveProductRequest) error
+	Logout(ctx context.Context, req *model.LogoutRequest) error
 }
 
 type UserHandler struct {
@@ -118,9 +120,28 @@ func (h *UserHandler) UpdateUserById(c *gin.Context) {
 	user, err := h.svc.UpdateUserById(c, &req, role.(string))
 	if err != nil {
 		errs.RespondServiceError(c, err)
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
+}
+
+func (h *UserHandler) Logout(c *gin.Context) {
+	id, exist := c.Get("user_id")
+	if !exist {
+		errs.RespondError(c, http.StatusBadRequest, "invalid_request", "no user found")
+		return
+	}
+
+	blockKey := "blocked_user:" + strconv.Itoa(id.(int))
+	req := model.LogoutRequest{BlockKey: blockKey}
+	err := h.svc.Logout(c, &req)
+	if err != nil {
+		errs.RespondServiceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": true})
 }
 
 func (h *UserHandler) BlockUserById(c *gin.Context) {
@@ -129,9 +150,17 @@ func (h *UserHandler) BlockUserById(c *gin.Context) {
 		errs.RespondError(c, http.StatusBadRequest, "invalid_request", "no user found")
 		return
 	}
-	req := model.BlockUserByIdRequest{Id: id.(int64)}
 
-	err := h.svc.BlockUserById(c, &req)
+	blockReq := model.BlockUserByIdRequest{Id: id.(int64)}
+	err := h.svc.BlockUserById(c, &blockReq)
+	if err != nil {
+		errs.RespondServiceError(c, err)
+		return
+	}
+
+	blockKey := "blocked_user:" + strconv.Itoa(id.(int))
+	logoutReq := model.LogoutRequest{BlockKey: blockKey}
+	err = h.svc.Logout(c, &logoutReq)
 	if err != nil {
 		errs.RespondServiceError(c, err)
 		return
@@ -146,8 +175,8 @@ func (h *UserHandler) UnblockUserById(c *gin.Context) {
 		errs.RespondError(c, http.StatusBadRequest, "invalid_request", "no user found")
 		return
 	}
-	req := model.UnblockUserByIdRequest{Id: id.(int64)}
 
+	req := model.UnblockUserByIdRequest{Id: id.(int64)}
 	err := h.svc.UnblockUserById(c, &req)
 	if err != nil {
 		errs.RespondServiceError(c, err)
