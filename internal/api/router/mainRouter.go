@@ -25,7 +25,7 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, JWTConfig config.JWTConfig) 
 	jwtManager := jwt.NewJWTManager(JWTConfig.Secret, JWTConfig.Expiration)
 
 	// Service init
-	productService := service.NewProductService(productRepo)
+	productService := service.NewProductService(productRepo, rdb)
 	userService := service.NewUserService(userRepo, rdb, jwtManager)
 	categoryService := service.NewCategoriesService(categoryRepo)
 	cartService := service.NewCartService(cartRepo)

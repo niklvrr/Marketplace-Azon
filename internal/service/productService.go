@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
 	"github.com/niklvrr/myMarketplace/internal/model"
+	"github.com/redis/go-redis/v9"
 )
 
 type IProductRepository interface {
@@ -22,11 +25,15 @@ type IProductRepository interface {
 }
 
 type ProductService struct {
-	repo IProductRepository
+	repo  IProductRepository
+	cache *redis.Client
 }
 
-func NewProductService(repo IProductRepository) *ProductService {
-	return &ProductService{repo: repo}
+func NewProductService(repo IProductRepository, cache *redis.Client) *ProductService {
+	return &ProductService{
+		repo:  repo,
+		cache: cache,
+	}
 }
 
 func (s *ProductService) Create(ctx context.Context, sellerId int64, req *model.CreateProductRequest) (model.ProductResponse, error) {
@@ -43,6 +50,8 @@ func (s *ProductService) Create(ctx context.Context, sellerId int64, req *model.
 	if err != nil {
 		return model.ProductResponse{}, err
 	}
+
+	s.cache.Del(ctx, "products:all")
 
 	return model.ProductResponse{
 		Id:          p.Id,
@@ -87,6 +96,7 @@ func (s *ProductService) UpdateById(ctx context.Context, sellerId int64, req *mo
 		return model.ProductResponse{}, err
 	}
 
+	s.cache.Del(ctx, "products:all")
 	return model.ProductResponse{
 		Id:          p.Id,
 		SellerId:    p.SellerId,
@@ -103,10 +113,23 @@ func (s *ProductService) DeleteById(ctx context.Context, req *model.DeleteProduc
 	if err != nil {
 		return err
 	}
+
+	s.cache.Del(ctx, "products:all")
 	return nil
 }
 
 func (s *ProductService) GetAll(ctx context.Context, page, limit int) ([]model.ProductResponse, int64, error) {
+	const cachedKey = "products:all"
+
+	cachedData, err := s.cache.Get(ctx, cachedKey).Bytes()
+	if err == nil {
+		var products []model.ProductResponse
+		err = json.Unmarshal(cachedData, &products)
+		if err == nil {
+			return products, int64(len(products)), nil
+		}
+	}
+
 	offset := (page - 1) * limit
 	products, total, err := s.repo.GetAllProducts(ctx, offset, limit)
 	if err != nil {
@@ -127,6 +150,14 @@ func (s *ProductService) GetAll(ctx context.Context, page, limit int) ([]model.P
 
 		result = append(result, resp)
 	}
+
+	dataToCache, err := json.Marshal(result)
+	if err != nil {
+		return []model.ProductResponse{}, 0, err
+	}
+
+	cacheExpiration := 5 * time.Minute
+	s.cache.Set(ctx, cachedKey, string(dataToCache), cacheExpiration)
 
 	return result, total, nil
 }
