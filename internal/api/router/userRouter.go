@@ -5,16 +5,17 @@ import (
 	"github.com/niklvrr/myMarketplace/internal/api/middleware"
 	"github.com/niklvrr/myMarketplace/internal/handler"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 )
 
-func registerUserRouter(router *gin.RouterGroup, userHandler *handler.UserHandler, jwtManager *jwt.JWTManager) {
+func registerUserRouter(router *gin.RouterGroup, userHandler *handler.UserHandler, jwtManager *jwt.JWTManager, cache *redis.Client) {
 	user := router.Group("/user")
 	{
 		user.POST("/signup", userHandler.SignUp)
 		user.POST("/login", userHandler.Login)
 
 		auth := user.Group("")
-		auth.Use(middleware.JWTRegister(jwtManager))
+		auth.Use(middleware.JWTRegister(jwtManager, cache))
 		{
 			auth.GET("", userHandler.GetUserById)
 			auth.PUT("", userHandler.UpdateUserById)

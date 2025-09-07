@@ -5,11 +5,12 @@ import (
 	"github.com/niklvrr/myMarketplace/internal/api/middleware"
 	"github.com/niklvrr/myMarketplace/internal/handler"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 )
 
-func registerProductRouter(router *gin.RouterGroup, productHandler *handler.ProductHandler, jwtManager *jwt.JWTManager) {
+func registerProductRouter(router *gin.RouterGroup, productHandler *handler.ProductHandler, jwtManager *jwt.JWTManager, cache *redis.Client) {
 	products := router.Group("/products")
-	products.Use(middleware.JWTRegister(jwtManager))
+	products.Use(middleware.JWTRegister(jwtManager, cache))
 	{
 		products.GET("/:id", productHandler.Get)
 		products.GET("", productHandler.GetAll)

@@ -145,20 +145,19 @@ func (h *UserHandler) Logout(c *gin.Context) {
 }
 
 func (h *UserHandler) BlockUserById(c *gin.Context) {
-	id, exist := c.Get("user_id")
-	if !exist {
-		errs.RespondError(c, http.StatusBadRequest, "invalid_request", "no user found")
+	var blockReq model.BlockUserByIdRequest
+	if err := c.ShouldBind(&blockReq); err != nil {
+		errs.RespondError(c, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
 
-	blockReq := model.BlockUserByIdRequest{Id: id.(int64)}
 	err := h.svc.BlockUserById(c, &blockReq)
 	if err != nil {
 		errs.RespondServiceError(c, err)
 		return
 	}
 
-	blockKey := "blocked_user:" + strconv.Itoa(int(id.(int64)))
+	blockKey := "blocked_user:" + strconv.Itoa(int(blockReq.Id))
 	logoutReq := model.LogoutRequest{BlockKey: blockKey}
 	err = h.svc.Logout(c, &logoutReq)
 	if err != nil {
@@ -170,13 +169,12 @@ func (h *UserHandler) BlockUserById(c *gin.Context) {
 }
 
 func (h *UserHandler) UnblockUserById(c *gin.Context) {
-	id, exist := c.Get("user_id")
-	if !exist {
-		errs.RespondError(c, http.StatusBadRequest, "invalid_request", "no user found")
+	var req model.UnblockUserByIdRequest
+	if err := c.ShouldBind(&req); err != nil {
+		errs.RespondError(c, http.StatusBadRequest, "invalid_request", err.Error())
 		return
 	}
 
-	req := model.UnblockUserByIdRequest{Id: id.(int64)}
 	err := h.svc.UnblockUserById(c, &req)
 	if err != nil {
 		errs.RespondServiceError(c, err)

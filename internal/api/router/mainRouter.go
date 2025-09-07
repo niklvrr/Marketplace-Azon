@@ -43,11 +43,11 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, JWTConfig config.JWTConfig) 
 	api := r.Group("/api")
 	v1 := api.Group("/v1")
 
-	registerProductRouter(v1, productHandler, jwtManager)
-	registerUserRouter(v1, userHandler, jwtManager)
-	registerCategoriesRouter(v1, categoryHandler, jwtManager)
-	registerCartRouter(v1, cartHandler, jwtManager)
-	registerOrderRouter(v1, orderHandler, jwtManager)
+	registerProductRouter(v1, productHandler, jwtManager, rdb)
+	registerUserRouter(v1, userHandler, jwtManager, rdb)
+	registerCategoriesRouter(v1, categoryHandler, jwtManager, rdb)
+	registerCartRouter(v1, cartHandler, jwtManager, rdb)
+	registerOrderRouter(v1, orderHandler, jwtManager, rdb)
 
 	return r
 }

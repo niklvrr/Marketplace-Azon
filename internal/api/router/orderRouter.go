@@ -5,11 +5,12 @@ import (
 	"github.com/niklvrr/myMarketplace/internal/api/middleware"
 	"github.com/niklvrr/myMarketplace/internal/handler"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 )
 
-func registerOrderRouter(router *gin.RouterGroup, orderHandler *handler.OrderHandler, jwtManager *jwt.JWTManager) {
+func registerOrderRouter(router *gin.RouterGroup, orderHandler *handler.OrderHandler, jwtManager *jwt.JWTManager, cache *redis.Client) {
 	order := router.Group("/order")
-	order.Use(middleware.JWTRegister(jwtManager))
+	order.Use(middleware.JWTRegister(jwtManager, cache))
 	{
 		order.POST("", orderHandler.Create)
 		order.GET("/history", orderHandler.GetOrdersByUserId)

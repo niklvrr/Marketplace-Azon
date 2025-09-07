@@ -82,6 +82,12 @@ func (s *UserService) Login(ctx context.Context, req *model.LoginRequest) (strin
 		return "", blockedUserError
 	}
 
+	blacklistKey := "blacklist_user:" + strconv.Itoa(int(user.Id))
+	err = s.cache.Del(ctx, blacklistKey).Err()
+	if err != nil {
+		return "", err
+	}
+
 	return s.jwtManager.GenerateToken(user.Id, user.Role)
 }
 
