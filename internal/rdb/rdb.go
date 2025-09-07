@@ -1,4 +1,4 @@
-package internal
+package rdb
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"log/slog"
 )
 
-func NewRDB(addr string, logger *slog.Logger) redis.Client {
+func NewRDB(addr string, logger *slog.Logger) *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: "",
@@ -15,7 +15,7 @@ func NewRDB(addr string, logger *slog.Logger) redis.Client {
 
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		logger.Error("redis db init error", err)
-		return redis.Client{}
+		return nil
 	}
 
 	return rdb

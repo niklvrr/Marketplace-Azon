@@ -40,12 +40,17 @@ type LogConfig struct {
 	Format   string `yaml:"format"`
 }
 
+type CacheConfig struct {
+	Address string `yaml:"addr"`
+}
+
 type Config struct {
 	App      AppConfig      `yaml:"app"`
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	JWT      JWTConfig      `yaml:"jwt"`
 	Log      LogConfig      `yaml:"logging"`
+	Cache    CacheConfig    `yaml:"cache"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -100,6 +105,10 @@ func LoadConfig() (*Config, error) {
 
 	if jwtSecret := os.Getenv("JWT_SECRET"); jwtSecret != "" {
 		cfg.JWT.Secret = jwtSecret
+	}
+
+	if address := os.Getenv("REDIS_ADDR"); address != "" {
+		cfg.Cache.Address = address
 	}
 
 	return &cfg, nil

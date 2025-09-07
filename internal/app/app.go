@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
+	"github.com/niklvrr/myMarketplace/internal/rdb"
 	"log"
 	"log/slog"
 	"net/http"
@@ -34,9 +35,9 @@ func Run() {
 	db.NewDB(dbUrl, lgr)
 	defer db.Db.Close()
 
-	//time.Sleep(20 * time.Second)
-
 	mustRunMigrations(dbUrl, lgr)
+
+	rdb.NewRDB(cfg.Cache.Address, lgr)
 
 	r := router.NewRouter(db.Db, cfg.JWT)
 	lgr.Info("Starting server")

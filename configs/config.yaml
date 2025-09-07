@@ -16,6 +16,9 @@ database:
   user: ""
   max_connections: 20
 
+cache:
+  addr: "marketplace-cache:6379"
+
 jwt:
   secret: ""
   expiration: 24h
