@@ -3,12 +3,12 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/niklvrr/myMarketplace/internal/api/middleware"
-	"github.com/niklvrr/myMarketplace/internal/handler"
+	"github.com/niklvrr/myMarketplace/internal/handler/categoriesHandler"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
 	"github.com/redis/go-redis/v9"
 )
 
-func registerCategoriesRouter(router *gin.RouterGroup, categoriesHandler *handler.CategoriesHandler, jwtManager *jwt.JWTManager, cache *redis.Client) {
+func registerCategoriesRouter(router *gin.RouterGroup, categoriesHandler *categoriesHandler.CategoriesHandler, jwtManager *jwt.JWTManager, cache *redis.Client) {
 	categories := router.Group("/categories")
 	categories.Use(middleware.JWTRegister(jwtManager, cache))
 	{
