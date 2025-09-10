@@ -1,14 +1,22 @@
 package router
 
 import (
+	"github.com/niklvrr/myMarketplace/internal/handler/cartHandler"
+	"github.com/niklvrr/myMarketplace/internal/handler/categoriesHandler"
+	"github.com/niklvrr/myMarketplace/internal/handler/orderHandler"
+	"github.com/niklvrr/myMarketplace/internal/handler/productHandler"
+	"github.com/niklvrr/myMarketplace/internal/handler/userHandler"
+	"github.com/niklvrr/myMarketplace/internal/service/cartService"
+	"github.com/niklvrr/myMarketplace/internal/service/categoriesService"
+	"github.com/niklvrr/myMarketplace/internal/service/orderService"
+	"github.com/niklvrr/myMarketplace/internal/service/productService"
+	"github.com/niklvrr/myMarketplace/internal/service/userService"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/niklvrr/myMarketplace/internal/config"
-	"github.com/niklvrr/myMarketplace/internal/handler"
 	"github.com/niklvrr/myMarketplace/internal/repository"
-	"github.com/niklvrr/myMarketplace/internal/service"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
 	"github.com/redis/go-redis/v9"
 )
@@ -25,18 +33,18 @@ func NewRouter(db *pgxpool.Pool, rdb *redis.Client, JWTConfig config.JWTConfig) 
 	jwtManager := jwt.NewJWTManager(JWTConfig.Secret, JWTConfig.Expiration)
 
 	// Service init
-	productService := service.NewProductService(productRepo, rdb)
-	userService := service.NewUserService(userRepo, rdb, jwtManager)
-	categoryService := service.NewCategoriesService(categoryRepo)
-	cartService := service.NewCartService(cartRepo)
-	orderService := service.NewOrderService(orderRepo)
+	productService := productService.NewProductService(productRepo, rdb)
+	userService := userService.NewUserService(userRepo, rdb, jwtManager)
+	categoryService := categoriesService.NewCategoriesService(categoryRepo)
+	cartService := cartService.NewCartService(cartRepo)
+	orderService := orderService.NewOrderService(orderRepo)
 
 	// Handler init
-	productHandler := handler.NewProductsHandler(productService)
-	userHandler := handler.NewUserHandler(userService)
-	categoryHandler := handler.NewCategoryHandler(categoryService)
-	cartHandler := handler.NewCartHandler(cartService)
-	orderHandler := handler.NewOrderHandler(orderService)
+	productHandler := productHandler.NewProductsHandler(productService)
+	userHandler := userHandler.NewUserHandler(userService)
+	categoryHandler := categoriesHandler.NewCategoryHandler(categoryService)
+	cartHandler := cartHandler.NewCartHandler(cartService)
+	orderHandler := orderHandler.NewOrderHandler(orderService)
 
 	r := gin.Default()
 

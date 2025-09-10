@@ -1,4 +1,4 @@
-package handler
+package categoriesHandler
 
 import (
 	"context"

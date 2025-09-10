@@ -3,12 +3,12 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/niklvrr/myMarketplace/internal/api/middleware"
-	"github.com/niklvrr/myMarketplace/internal/handler"
+	"github.com/niklvrr/myMarketplace/internal/handler/userHandler"
 	"github.com/niklvrr/myMarketplace/pkg/jwt"
 	"github.com/redis/go-redis/v9"
 )
 
-func registerUserRouter(router *gin.RouterGroup, userHandler *handler.UserHandler, jwtManager *jwt.JWTManager, cache *redis.Client) {
+func registerUserRouter(router *gin.RouterGroup, userHandler *userHandler.UserHandler, jwtManager *jwt.JWTManager, cache *redis.Client) {
 	user := router.Group("/user")
 	{
 		user.POST("/signup", userHandler.SignUp)
