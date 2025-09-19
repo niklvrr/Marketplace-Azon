@@ -1,4 +1,4 @@
-module github.com/niklvrr/myMarketplace
+module github.com/niklvrr/Marketplace-Azon
 
 go 1.24
 
